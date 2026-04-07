@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"REQUIRED: Call cortex_session_load(project_id=\\\"sim\\\") to initialize Cortex for this session. Log decisions with cortex_decide and changelog with cortex_changelog_add.\"}}'",
+            "statusMessage": "Loading Cortex session for sim..."
+          }
+        ]
+      }
+    ]
+  }
+}
