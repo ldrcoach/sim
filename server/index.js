@@ -213,9 +213,9 @@ app.get('/privacy', (req, res) => {
   responses are not part of your grade.</p>
 
   <h2>How long</h2>
-  <p>Your email is kept only for the duration of the course, then deleted.
-  Your questionnaire responses (not tied to your name after that point) are
-  kept for course improvement purposes.</p>
+  <p>Your email and responses are stored securely for as long as they are
+  useful for course measurement. You can ask your course developer to
+  delete your data at any time -- see "How to ask for deletion" below.</p>
 
   <h2>How to ask for deletion</h2>
   <p>Email your course developer at any time to ask that your responses be
