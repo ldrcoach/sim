@@ -233,8 +233,9 @@ app.get('*', (req, res) => {
 
 // Only start listening when run directly (not when imported by tests)
 if (require.main === module) {
+  let loadedInstruments = null;
   try {
-    instrumentLoader.load();
+    loadedInstruments = instrumentLoader.load();
     console.log('[CheckIn] Instruments loaded and validated');
   } catch (err) {
     // Do not process.exit here: a bad instrument JSON file should only take
@@ -247,7 +248,20 @@ if (require.main === module) {
   }
 
   Promise.all([initSchema(), checkinDb.initCheckinSchema()])
-    .then(() => {
+    .then(async () => {
+      if (loadedInstruments) {
+        for (const instrument of loadedInstruments.values()) {
+          try {
+            await checkinDb.recordInstrumentVersion(instrument.course, instrument.module, 'baseline', instrument.version, instrument);
+            await checkinDb.recordInstrumentVersion(instrument.course, instrument.module, 'debrief', instrument.version, instrument);
+          } catch (err) {
+            // Same principle as above: this is audit bookkeeping, not
+            // load-bearing for chat/sessions/check-in's own request
+            // handling. Log and keep booting.
+            console.error(`[CheckIn] Failed to record instrument version for ${instrument.course}/${instrument.module}:`, err.message);
+          }
+        }
+      }
       app.listen(PORT, () => {
         console.log(`OBLD 500 Simulation Suite running on port ${PORT}`);
       });
