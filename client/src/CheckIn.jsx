@@ -1,7 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { C } from "./App";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function isValidEmail(email) {
+  if (typeof email !== "string" || email.length === 0 || email.length > 254) return false;
+  if (/\s/.test(email)) return false;
+  const atIndex = email.indexOf("@");
+  if (atIndex <= 0 || atIndex !== email.lastIndexOf("@")) return false;
+  const domain = email.slice(atIndex + 1);
+  const dotIndex = domain.lastIndexOf(".");
+  if (dotIndex <= 0 || dotIndex === domain.length - 1) return false;
+  return true;
+}
 
 const RESPONSIVE_STYLE = `
   .checkin-radio-row { display: flex; gap: 12px; justify-content: space-between; }
@@ -31,7 +40,7 @@ function ErrorScreen({ message }) {
 
 function IntroScreen({ instrument, moduleNum, phase, email, setEmail, onStart }) {
   const [touched, setTouched] = useState(false);
-  const emailValid = EMAIL_RE.test(email.trim());
+  const emailValid = isValidEmail(email.trim());
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px" }}>

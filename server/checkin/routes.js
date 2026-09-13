@@ -23,7 +23,16 @@ function requireDb(req, res, next) {
   next();
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function isValidEmail(email) {
+  if (typeof email !== 'string' || email.length === 0 || email.length > 254) return false;
+  if (/\s/.test(email)) return false;
+  const atIndex = email.indexOf('@');
+  if (atIndex <= 0 || atIndex !== email.lastIndexOf('@')) return false; // exactly one @, not at the start
+  const domain = email.slice(atIndex + 1);
+  const dotIndex = domain.lastIndexOf('.');
+  if (dotIndex <= 0 || dotIndex === domain.length - 1) return false; // dot present, not at domain's edges
+  return true;
+}
 const VALID_PHASES = ['baseline', 'debrief'];
 
 router.get('/instrument/:course/:module/:phase', checkinLimiter, (req, res) => {
@@ -58,7 +67,7 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
     if (!VALID_PHASES.includes(phase)) {
       return res.status(400).json({ error: 'phase must be "baseline" or "debrief"' });
     }
-    if (!ident || typeof ident.email !== 'string' || !EMAIL_RE.test(ident.email)) {
+    if (!ident || !isValidEmail(ident.email)) {
       return res.status(400).json({ error: 'identity.email is required and must be a valid email' });
     }
     if (!started_at || typeof started_at !== 'string') {
