@@ -62,6 +62,11 @@ describe('instrumentLoader', () => {
     expect(view.debrief_extras.open_ended).toHaveLength(3);
   });
 
+  test('getPublicView throws for an invalid phase', () => {
+    loader.load(path.join(__dirname, '..', 'checkin', 'instruments'));
+    expect(() => loader.getPublicView('OBLD500', 4, 'invalid')).toThrow(/Invalid phase/);
+  });
+
   test('getPublicView returns null for an unknown instrument', () => {
     loader.load(path.join(__dirname, '..', 'checkin', 'instruments'));
     expect(loader.getPublicView('OBLD500', 99, 'baseline')).toBeNull();

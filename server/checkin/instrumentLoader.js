@@ -51,6 +51,9 @@ function getInstrument(course, moduleNum) {
 }
 
 function getPublicView(course, moduleNum, phase) {
+  if (phase !== 'baseline' && phase !== 'debrief') {
+    throw new Error(`Invalid phase: ${phase}. Must be 'baseline' or 'debrief'.`);
+  }
   const instrument = getInstrument(course, moduleNum);
   if (!instrument) return null;
 
