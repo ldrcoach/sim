@@ -176,6 +176,56 @@ app.get('/api/students/:id/history', requireDb, async (req, res) => {
   }
 });
 
+// Privacy statement page
+app.get('/privacy', (req, res) => {
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Privacy Statement - OBLD 500 Check-In</title>
+  <style>
+    body { font-family: 'Segoe UI', -apple-system, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #0a1628; }
+    h2 { color: #0a1628; font-size: 18px; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Statement</h1>
+  <p>This page explains what happens to your responses when you complete a
+  Baseline Check or Debrief in the OBLD 500 check-in module, administered by
+  LDRC.</p>
+
+  <h2>What is collected</h2>
+  <p>Your ERAU email address, your answers to the questionnaire items, and,
+  on the Debrief, your written reflections. We do not collect your IP
+  address, browser information, or any Canvas identifiers.</p>
+
+  <h2>Why</h2>
+  <p>Your email is used only to match your Baseline and Debrief responses
+  for the same module, so your instructor can see how your self-assessed
+  skills changed over the module. It is stored encrypted and separately
+  from your answers.</p>
+
+  <h2>Who can see it</h2>
+  <p>Your course developer can see your responses in identifiable form for
+  course measurement. In aggregate (combined across the whole class,
+  without names), your responses may also be reported to ERAU. Your
+  responses are not part of your grade.</p>
+
+  <h2>How long</h2>
+  <p>Your email is kept only for the duration of the course, then deleted.
+  Your questionnaire responses (not tied to your name after that point) are
+  kept for course improvement purposes.</p>
+
+  <h2>How to ask for deletion</h2>
+  <p>Email your course developer at any time to ask that your responses be
+  deleted. Any use of your data for research beyond course measurement
+  would require separate IRB-approved consent, which this page does not
+  cover.</p>
+</body>
+</html>`);
+});
+
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
