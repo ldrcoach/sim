@@ -187,15 +187,25 @@ if (require.main === module) {
     instrumentLoader.load();
     console.log('[CheckIn] Instruments loaded and validated');
   } catch (err) {
-    console.error('[CheckIn] Instrument validation failed at boot:', err.message);
-    process.exit(1);
+    // Do not process.exit here: a bad instrument JSON file should only take
+    // down the check-in feature, not the whole app (chat, sessions, SPA).
+    // Check-in's own routes will 500 per-request until this is fixed and
+    // redeployed -- Express 4 catches the synchronous throw from a later
+    // ensureLoaded() retry inside the route handler, so it degrades to a
+    // per-request error rather than crashing the process.
+    console.error('[CheckIn] Instrument validation failed at boot -- check-in endpoints will error until this is fixed and redeployed:', err.message);
   }
 
-  Promise.all([initSchema(), checkinDb.initCheckinSchema()]).then(() => {
-    app.listen(PORT, () => {
-      console.log(`OBLD 500 Simulation Suite running on port ${PORT}`);
+  Promise.all([initSchema(), checkinDb.initCheckinSchema()])
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`OBLD 500 Simulation Suite running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('[Boot] Unexpected error during startup:', err);
+      process.exit(1);
     });
-  });
 }
 
 module.exports = app;
