@@ -24,54 +24,42 @@ sim-ldrcoach/
   setup.sh          Droplet provisioning script
 ```
 
-## Deployment (DigitalOcean Droplet)
+## Deployment (Azure Container Apps)
 
-### Prerequisites
-- A DigitalOcean droplet (Ubuntu 24.04, $6/month Basic plan is sufficient)
-- An Anthropic API key (console.anthropic.com)
-- DNS access to add an A record for sim.ldrcoach.com
+Sim runs as a single Docker image (multi-stage `Dockerfile`: builds the Vite
+client, then serves it as static files from the Express server) on Azure
+Container Apps, Consumption plan.
 
-### Steps
+- **Apps:** `sim-dev` / `sim-staging` / `sim-prod` in resource group
+  `rg-calkeepwest-dev`, on the shared `ldrc-cortex-dev-env` managed
+  environment.
+- **Custom domain:** `sim.ldrcoach.com` -> `sim-prod`, via an Azure managed
+  certificate (auto-renewing).
+- **Secrets:** pulled from Key Vault `ldrc-cortex-kv-dev`
+  (`ANTHROPIC_API_KEY`, and `DATABASE_URL` once persistence is wired) --
+  never set as plain env vars.
 
-1. **Create droplet** in DigitalOcean (Ubuntu 24.04, Basic $6/month, any region)
+### Deploying a new build
 
-2. **Upload this directory** to the droplet:
-   ```bash
-   scp -r sim-ldrcoach root@YOUR_DROPLET_IP:/root/
-   ```
+```bash
+# Build and push the image
+az acr build --registry ldrccortexdev --image sim-prod:$(date +%Y%m%d%H%M%S) .
 
-3. **Run setup**:
-   ```bash
-   ssh root@YOUR_DROPLET_IP
-   cd /root/sim-ldrcoach
-   bash setup.sh
-   ```
+# Point the container app at the new tag and (re)start it
+az containerapp update -n sim-prod -g rg-calkeepwest-dev \
+  --image ldrccortexdev.azurecr.io/sim-prod:<tag>
+az containerapp start -n sim-prod -g rg-calkeepwest-dev
+```
 
-4. **Add your API key**:
-   ```bash
-   nano /opt/obld500-sim/server/.env
-   # Set ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
-   ```
+There is no CD pipeline yet -- `.github/workflows/ci.yml` only runs the Jest
+suite on push/PR. Deploys are manual until that's added.
 
-5. **Configure DNS**: Add an A record for `sim.ldrcoach.com` pointing to the droplet IP
+`nginx/` and `setup.sh` are the old DigitalOcean droplet path and are no
+longer used; kept only for reference.
 
-6. **Set up nginx + SSL**:
-   ```bash
-   cp /opt/obld500-sim/nginx/sim.ldrcoach.com.conf /etc/nginx/sites-available/
-   ln -s /etc/nginx/sites-available/sim.ldrcoach.com.conf /etc/nginx/sites-enabled/
-   nginx -t && systemctl reload nginx
-   certbot --nginx -d sim.ldrcoach.com
-   ```
+### Verify
 
-7. **Start the app**:
-   ```bash
-   cd /opt/obld500-sim/server
-   pm2 start index.js --name obld500-sim
-   pm2 save
-   pm2 startup
-   ```
-
-8. **Verify**: Visit https://sim.ldrcoach.com
+Visit https://sim.ldrcoach.com
 
 ## Local Development
 

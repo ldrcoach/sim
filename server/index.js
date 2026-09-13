@@ -52,7 +52,7 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: process.env.MODEL || 'claude-sonnet-4-20250514',
+        model: process.env.MODEL || 'claude-sonnet-5',
         max_tokens,
         system,
         messages,

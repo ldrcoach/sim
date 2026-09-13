@@ -10,7 +10,9 @@ AI-powered observation and practice simulations for OBLD 500 (Leadership in Orga
 - Backend: Express API proxy + persistence endpoints
 - AI: Anthropic Claude API for character conversations
 - Database: PostgreSQL for student scores and transcripts
-- Deployment: DigitalOcean droplet, Nginx reverse proxy
+- Deployment: Azure Container Apps (Consumption plan), single Docker image
+  serving the Express server + built React static assets. Custom domain
+  sim.ldrcoach.com bound to the `sim-prod` container app.
 
 ## Repository Structure
 
@@ -21,8 +23,8 @@ client/             # React frontend (Vite build)
     suites/         # 4 suite components (simulations + observations)
 server/             # Express API proxy + persistence
   index.js          # Proxies /api/chat to Anthropic, persistence endpoints
-nginx/              # Reverse proxy config
-setup.sh            # Droplet provisioning script
+Dockerfile          # Multi-stage build: client (Vite) -> server (Express)
+nginx/, setup.sh    # Legacy DigitalOcean droplet path, no longer used
 ```
 
 ## Commands
@@ -36,8 +38,18 @@ cd server && node index.js    # Backend server
 cd client && npm run build    # Production build
 
 # Deploy
-bash setup.sh                 # Provision droplet
+az acr build --registry ldrccortexdev --image sim-prod:<tag> .
+az containerapp update -n sim-prod -g rg-calkeepwest-dev --image ldrccortexdev.azurecr.io/sim-prod:<tag>
 ```
+
+## Azure Resources
+
+- Container Apps: `sim-dev` / `sim-staging` / `sim-prod` in `rg-calkeepwest-dev`,
+  on the shared `ldrc-cortex-dev-env` managed environment.
+- Secrets pulled from Key Vault `ldrc-cortex-kv-dev` (`ANTHROPIC_API_KEY`,
+  and `DATABASE_URL` once persistence is wired).
+- No CD pipeline yet -- deploys are manual (`az acr build` + `containerapp update`).
+  CI (`.github/workflows/ci.yml`) only runs the Jest test suite.
 
 ## Cortex Integration
 
