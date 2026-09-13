@@ -2820,17 +2820,20 @@ function ReviewScreen({ instrument, phase, answeredCounts, onSubmit, onBack, sub
 }
 
 function ConfirmationScreen({ completionText, moduleNum, completionCode }) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState("idle"); // idle | copied | failed
   const text = completionText.replace("{module}", moduleNum);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(completionCode);
-      setCopied(true);
+      setCopyState("copied");
     } catch {
-      setCopied(false);
+      setCopyState("failed");
     }
   };
+
+  const buttonLabel =
+    copyState === "copied" ? "Copied!" : copyState === "failed" ? "Copy failed" : "Copy code";
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px", textAlign: "center" }}>
@@ -2851,12 +2854,20 @@ function ConfirmationScreen({ completionText, moduleNum, completionCode }) {
           background: C.navy, color: C.white, cursor: "pointer",
         }}
       >
-        {copied ? "Copied!" : "Copy code"}
+        {buttonLabel}
       </button>
+
+      {copyState === "failed" && (
+        <p role="alert" style={{ color: C.danger, fontSize: 13, marginTop: 8 }}>
+          Couldn't copy automatically. Select the code above and copy it manually.
+        </p>
+      )}
     </div>
   );
 }
 ```
+
+A no-op `copied ? ... : ...` boolean (the catch branch just re-set `false`, which it already was) previously left the learner with zero feedback on a failed clipboard write -- plausible in a Canvas iframe embed, non-HTTPS context, or denied permission. The three-state version above, confirmed live in a browser during code review (a forced clipboard rejection correctly showed "Copy failed" plus the fallback instruction), fixes that.
 
 - [ ] **Step 2: Wire straightlining confirmation, submit, and confirmation state**
 
@@ -2875,6 +2886,17 @@ Capture `startedAt` when the learner clicks Start on the Intro screen -- update 
 ```javascript
 onStart={() => { setStartedAt(new Date().toISOString()); setStatus("subscale"); }}
 ```
+
+Also update `handleAnswer` (defined back in Task 13, before `straightlineConfirmed` existed) so it resets the confirmation whenever a core item's answer changes:
+
+```javascript
+const handleAnswer = (itemId, value) => {
+  setAnswers((prev) => ({ ...prev, [itemId]: value }));
+  setStraightlineConfirmed(false);
+};
+```
+
+Without this, once a learner confirms the straightline warning on one submit attempt, it stays confirmed for the rest of the session -- so if that submission fails and they go back and edit into a *different* straightlined pattern, the warning silently never reappears for data they never actually confirmed. Confirmed live in a browser during code review: edit-then-resubmit-unchanged correctly does NOT re-prompt (no needless nagging), but edit-into-a-new-straightlined-pattern-then-resubmit correctly DOES re-prompt. No equivalent change is needed on the `pxAnswers`/`openAnswers` setters -- `isStraightlineLocal()` below only ever reads `answers`.
 
 Add the submit handler as a function inside `CheckIn`, above the `return`:
 
@@ -2903,8 +2925,14 @@ const doSubmit = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+    if (!res.ok) {
+      if (res.status >= 400 && res.status < 500) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Error ${res.status}`);
+      }
+      throw new Error("Something went wrong submitting your check-in. Please try again.");
+    }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
     setResult(data);
     setStatus("confirmation");
   } catch (err) {
