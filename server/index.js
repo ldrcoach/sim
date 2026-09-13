@@ -3,6 +3,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { getPool, isAvailable, initSchema } = require('./db');
+const checkinRoutes = require('./checkin/routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,6 +12,8 @@ const PORT = process.env.PORT || 3000;
 // hop; trust its X-Forwarded-For so express-rate-limit keys on the real
 // client IP instead of the proxy's.
 app.set('trust proxy', 1);
+
+app.use('/api', checkinRoutes);
 
 app.use(express.json({ limit: '1mb' }));
 
