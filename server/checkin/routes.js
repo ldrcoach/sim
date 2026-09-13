@@ -8,8 +8,6 @@ const checkinDb = require('./db');
 
 const router = express.Router();
 
-router.use(express.json({ limit: '64kb' }));
-
 const checkinLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
@@ -17,7 +15,6 @@ const checkinLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests. Please wait before trying again.' },
 });
-router.use(checkinLimiter);
 
 function requireDb(req, res, next) {
   if (!checkinDb.isAvailable()) {
@@ -29,7 +26,7 @@ function requireDb(req, res, next) {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_PHASES = ['baseline', 'debrief'];
 
-router.get('/instrument/:course/:module/:phase', (req, res) => {
+router.get('/instrument/:course/:module/:phase', checkinLimiter, (req, res) => {
   const { course, phase } = req.params;
   const moduleNum = Number(req.params.module);
 
@@ -47,7 +44,7 @@ router.get('/instrument/:course/:module/:phase', (req, res) => {
   res.json(view);
 });
 
-router.post('/responses', requireDb, async (req, res) => {
+router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requireDb, async (req, res) => {
   try {
     const { course, phase, identity: ident, started_at, answers, extras } = req.body;
     const moduleNum = Number(req.body.module);

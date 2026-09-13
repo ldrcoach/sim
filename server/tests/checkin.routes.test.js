@@ -183,3 +183,25 @@ describe('POST /api/responses', () => {
     expect(res.status).toBe(503);
   });
 });
+
+describe('Task 9 regression: check-in router does not affect other /api routes', () => {
+  let app;
+  beforeEach(() => {
+    app = createApp();
+  });
+
+  test('a /api/chat body larger than 64KB (but under 1MB) is not rejected by the check-in router\'s 64KB limit', async () => {
+    const bigContent = 'x'.repeat(80 * 1024); // 80KB: over check-in's 64KB cap, under the app's 1MB cap
+    const res = await request(app)
+      .post('/api/chat')
+      .send({ messages: [{ role: 'user', content: bigContent }] });
+    expect(res.status).toBe(200);
+  });
+
+  test('the check-in rate limiter (30/min) does not apply to non-check-in routes like /api/log', async () => {
+    for (let i = 0; i < 35; i++) {
+      const res = await request(app).post('/api/log').send({ event: 'test', suite: 's', scenario: 'x' });
+      expect(res.status).toBe(200);
+    }
+  });
+});
