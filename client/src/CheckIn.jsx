@@ -363,17 +363,20 @@ function ReviewScreen({ instrument, phase, answeredCounts, onSubmit, onBack, sub
 }
 
 function ConfirmationScreen({ completionText, moduleNum, completionCode }) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState("idle"); // idle | copied | failed
   const text = completionText.replace("{module}", moduleNum);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(completionCode);
-      setCopied(true);
+      setCopyState("copied");
     } catch {
-      setCopied(false);
+      setCopyState("failed");
     }
   };
+
+  const buttonLabel =
+    copyState === "copied" ? "Copied!" : copyState === "failed" ? "Copy failed" : "Copy code";
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px", textAlign: "center" }}>
@@ -394,8 +397,14 @@ function ConfirmationScreen({ completionText, moduleNum, completionCode }) {
           background: C.navy, color: C.white, cursor: "pointer",
         }}
       >
-        {copied ? "Copied!" : "Copy code"}
+        {buttonLabel}
       </button>
+
+      {copyState === "failed" && (
+        <p role="alert" style={{ color: C.danger, fontSize: 13, marginTop: 8 }}>
+          Couldn't copy automatically. Select the code above and copy it manually.
+        </p>
+      )}
     </div>
   );
 }
@@ -436,6 +445,7 @@ export default function CheckIn({ moduleNum, phase }) {
 
   const handleAnswer = (itemId, value) => {
     setAnswers((prev) => ({ ...prev, [itemId]: value }));
+    setStraightlineConfirmed(false);
   };
 
   const isStraightlineLocal = () => {
@@ -462,8 +472,14 @@ export default function CheckIn({ moduleNum, phase }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      if (!res.ok) {
+        if (res.status >= 400 && res.status < 500) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Error ${res.status}`);
+        }
+        throw new Error("Something went wrong submitting your check-in. Please try again.");
+      }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
       setResult(data);
       setStatus("confirmation");
     } catch (err) {
