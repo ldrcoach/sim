@@ -146,6 +146,28 @@ async function recordInstrumentVersion(course, moduleNum, phase, version, json) 
   return true;
 }
 
+async function findParticipantIdsWithEmailByCourse(course) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT DISTINCT cp.participant_id
+     FROM checkin_participants cp
+     JOIN checkin_responses cr ON cr.participant_id = cp.participant_id
+     WHERE cr.course = $1 AND cp.email_encrypted IS NOT NULL`,
+    [course]
+  );
+  return result.rows.map((r) => r.participant_id);
+}
+
+async function purgeParticipantEmails(participantIds) {
+  if (participantIds.length === 0) return 0;
+  const p = getPool();
+  const result = await p.query(
+    `UPDATE checkin_participants SET email_encrypted = NULL WHERE participant_id = ANY($1::varchar[])`,
+    [participantIds]
+  );
+  return result.rowCount;
+}
+
 module.exports = {
   isAvailable,
   initCheckinSchema,
@@ -153,4 +175,6 @@ module.exports = {
   findLatestResponseId,
   insertResponse,
   recordInstrumentVersion,
+  findParticipantIdsWithEmailByCourse,
+  purgeParticipantEmails,
 };

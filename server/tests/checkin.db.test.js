@@ -112,3 +112,36 @@ describe('recordInstrumentVersion', () => {
     expect(mockQuery.mock.calls[0][1][3]).toBe('dev-fixture-v1');
   });
 });
+
+describe('findParticipantIdsWithEmailByCourse', () => {
+  test('returns distinct participant ids that still have an encrypted email on file', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [{ participant_id: 'p1' }, { participant_id: 'p2' }] });
+    const ids = await checkinDb.findParticipantIdsWithEmailByCourse('OBLD500');
+    expect(ids).toEqual(['p1', 'p2']);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('email_encrypted IS NOT NULL'), ['OBLD500']);
+  });
+
+  test('returns an empty array when nobody matches', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    const ids = await checkinDb.findParticipantIdsWithEmailByCourse('OBLD500');
+    expect(ids).toEqual([]);
+  });
+});
+
+describe('purgeParticipantEmails', () => {
+  test('nulls email_encrypted for the given participant ids', async () => {
+    mockQuery.mockResolvedValueOnce({ rowCount: 2 });
+    const count = await checkinDb.purgeParticipantEmails(['p1', 'p2']);
+    expect(count).toBe(2);
+    expect(mockQuery).toHaveBeenCalledWith(
+      expect.stringContaining('SET email_encrypted = NULL'),
+      [['p1', 'p2']]
+    );
+  });
+
+  test('returns 0 and does not query when the id list is empty', async () => {
+    const count = await checkinDb.purgeParticipantEmails([]);
+    expect(count).toBe(0);
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+});
