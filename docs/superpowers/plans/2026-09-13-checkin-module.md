@@ -2060,7 +2060,8 @@ session persistence (see above) -- not a separate database, and not SQLite
 (Sim's Azure Container Apps filesystem does not persist across redeploys).
 
 **Instruments:** one JSON file per module under `server/checkin/instruments/`,
-validated at server boot (the process exits if any file is invalid). Only
+validated at server boot (a bad file logs loudly but the app keeps running --
+only check-in's own routes degrade, not the whole app). Only
 `AL.json` (Module 4, Active Listening) exists today, as a development fixture
 -- migrating the real 18 Google Forms into the remaining 9 module files is a
 separate, not-yet-started task.
