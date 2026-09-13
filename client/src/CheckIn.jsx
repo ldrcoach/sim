@@ -1,7 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { C } from "./App";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const RESPONSIVE_STYLE = `
+  .checkin-radio-row { display: flex; gap: 12px; justify-content: space-between; }
+  @media (max-width: 480px) {
+    .checkin-radio-row { flex-direction: column; align-items: stretch; gap: 0; }
+    .checkin-radio-option { flex-direction: row !important; justify-content: flex-start !important; gap: 12px !important; padding: 8px 0; }
+  }
+`;
 
 function LoadingScreen() {
   return (
@@ -95,12 +103,108 @@ function IntroScreen({ instrument, moduleNum, phase, email, setEmail, onStart })
   );
 }
 
+function LikertItem({ item, value, onChange, scaleLabels }) {
+  return (
+    <fieldset style={{ border: "none", borderBottom: `1px solid ${C.lightGray}`, padding: "16px 0", margin: 0 }}>
+      <legend style={{ fontSize: 16, marginBottom: 12, padding: 0 }}>{item.text}</legend>
+      <div className="checkin-radio-row" role="radiogroup" aria-label={item.text}>
+        {scaleLabels.map((label, i) => {
+          const optionValue = i + 1;
+          const inputId = `${item.id}-${optionValue}`;
+          return (
+            <label
+              key={optionValue}
+              htmlFor={inputId}
+              className="checkin-radio-option"
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                gap: 4, fontSize: 12, color: C.textSec, textAlign: "center",
+                cursor: "pointer", minHeight: 44, justifyContent: "center",
+              }}
+            >
+              <input
+                id={inputId}
+                type="radio"
+                name={item.id}
+                value={optionValue}
+                checked={value === optionValue}
+                onChange={() => onChange(item.id, optionValue)}
+                style={{ width: 20, height: 20 }}
+              />
+              {label}
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+function SubscaleScreen({ subscale, scaleLabels, answers, onAnswer, onNext, onBack, progressText }) {
+  const allAnswered = subscale.items.every((item) => answers[item.id] != null);
+  const [triedNext, setTriedNext] = useState(false);
+  const firstUnansweredRef = useRef(null);
+
+  const handleNext = () => {
+    if (!allAnswered) {
+      setTriedNext(true);
+      if (firstUnansweredRef.current) firstUnansweredRef.current.focus();
+      return;
+    }
+    onNext();
+  };
+
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px" }}>
+      <p aria-live="polite" style={{ fontSize: 13, color: C.midGray, marginBottom: 8 }}>
+        {progressText}
+      </p>
+      <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 4 }}>{subscale.name}</h2>
+      <p style={{ color: C.textSec, marginBottom: 16 }}>{subscale.help}</p>
+
+      {subscale.items.map((item, i) => (
+        <div key={item.id} ref={triedNext && answers[item.id] == null && !firstUnansweredRef.current ? firstUnansweredRef : null}>
+          <LikertItem
+            item={item}
+            value={answers[item.id]}
+            onChange={onAnswer}
+            scaleLabels={scaleLabels}
+          />
+        </div>
+      ))}
+
+      {triedNext && !allAnswered && (
+        <p role="alert" style={{ color: C.danger, fontSize: 13, margin: "12px 0" }}>
+          Please answer every item before continuing.
+        </p>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20 }}>
+        <button onClick={onBack} style={{ padding: "10px 20px", borderRadius: 6, border: `1px solid ${C.lightGray}`, background: C.white, minHeight: 44 }}>
+          Back
+        </button>
+        <button
+          onClick={handleNext}
+          style={{
+            padding: "10px 24px", borderRadius: 6, border: "none", minHeight: 44,
+            background: C.navy, color: C.white, cursor: "pointer",
+          }}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function CheckIn({ moduleNum, phase }) {
   const course = "OBLD500";
-  const [status, setStatus] = useState("loading"); // loading | error | intro
+  const [status, setStatus] = useState("loading"); // loading | error | intro | subscale
   const [errorMessage, setErrorMessage] = useState("");
   const [instrument, setInstrument] = useState(null);
   const [email, setEmail] = useState("");
+  const [answers, setAnswers] = useState({});
+  const [subscaleIndex, setSubscaleIndex] = useState(0);
 
   const loadInstrument = useCallback(async () => {
     setStatus("loading");
@@ -120,17 +224,48 @@ export default function CheckIn({ moduleNum, phase }) {
 
   useEffect(() => { loadInstrument(); }, [loadInstrument]);
 
+  const handleAnswer = (itemId, value) => {
+    setAnswers((prev) => ({ ...prev, [itemId]: value }));
+  };
+
   if (status === "loading") return <LoadingScreen />;
   if (status === "error") return <ErrorScreen message={errorMessage} />;
 
   return (
-    <IntroScreen
-      instrument={instrument}
-      moduleNum={moduleNum}
-      phase={phase}
-      email={email}
-      setEmail={setEmail}
-      onStart={() => { /* wired up in a later task */ }}
-    />
+    <>
+      <style>{RESPONSIVE_STYLE}</style>
+      {status === "intro" && (
+        <IntroScreen
+          instrument={instrument}
+          moduleNum={moduleNum}
+          phase={phase}
+          email={email}
+          setEmail={setEmail}
+          onStart={() => setStatus("subscale")}
+        />
+      )}
+      {status === "subscale" && (
+        <SubscaleScreen
+          subscale={instrument.subscales[subscaleIndex]}
+          scaleLabels={instrument.scale.labels}
+          answers={answers}
+          onAnswer={handleAnswer}
+          progressText={`Section ${subscaleIndex + 1} of ${instrument.subscales.length}`}
+          onBack={() => {
+            if (subscaleIndex === 0) setStatus("intro");
+            else setSubscaleIndex((i) => i - 1);
+          }}
+          onNext={() => {
+            if (subscaleIndex < instrument.subscales.length - 1) {
+              setSubscaleIndex((i) => i + 1);
+            } else {
+              setStatus(phase === "debrief" ? "post-experience" : "review");
+            }
+          }}
+        />
+      )}
+      {status === "post-experience" && <LoadingScreen />}
+      {status === "review" && <LoadingScreen />}
+    </>
   );
 }
