@@ -5,6 +5,7 @@ const identity = require('./identity');
 const completionCode = require('./completionCode');
 const scoring = require('./scoring');
 const checkinDb = require('./db');
+const courses = require('./courses');
 
 const router = express.Router();
 
@@ -77,6 +78,12 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
       return res.status(400).json({ error: 'answers object is required' });
     }
 
+    const courseConfig = courses.getCourseConfig(course);
+    const identityMode = courseConfig ? courseConfig.identity_mode : 'email';
+    if (identityMode !== 'email') {
+      return res.status(501).json({ error: `identity_mode "${identityMode}" is not yet implemented` });
+    }
+
     const instrument = instrumentLoader.getInstrument(course, moduleNum);
     if (!instrument) {
       return res.status(404).json({ error: 'Instrument not found' });
@@ -124,7 +131,7 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
 
     const participantId = identity.deriveParticipantId(ident.email, process.env.CHECKIN_HMAC_SECRET);
     const emailEncrypted = identity.encryptEmail(ident.email, process.env.CHECKIN_AES_KEY);
-    await checkinDb.upsertParticipant(participantId, emailEncrypted, 'email');
+    await checkinDb.upsertParticipant(participantId, emailEncrypted, identityMode);
 
     const supersedes = await checkinDb.findLatestResponseId(participantId, course, moduleNum, phase);
     const straightlineFlag = scoring.isStraightline(instrument, answers);

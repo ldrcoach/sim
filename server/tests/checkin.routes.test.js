@@ -14,6 +14,15 @@ jest.mock('../checkin/db', () => ({
   initCheckinSchema: jest.fn().mockResolvedValue(true),
 }));
 
+let mockCourseConfig = { identity_mode: 'email' };
+jest.mock('../checkin/courses', () => ({
+  getCourseConfig: (...args) => mockGetCourseConfig(...args),
+  load: jest.fn(),
+  ensureLoaded: jest.fn(),
+  getAllCourseConfigs: jest.fn().mockReturnValue({}),
+}));
+const mockGetCourseConfig = jest.fn((course) => (course === 'OBLD500' ? mockCourseConfig : null));
+
 // Mock the sim_sessions db module too, since index.js requires it unconditionally.
 jest.mock('../db', () => ({
   getPool: () => null,
@@ -82,6 +91,8 @@ describe('POST /api/responses', () => {
     mockUpsertParticipant.mockClear();
     mockFindLatestResponseId.mockClear().mockResolvedValue(null);
     mockInsertResponse.mockClear().mockResolvedValue({ id: 1, submitted_at: '2027-01-15T00:00:00Z' });
+    mockCourseConfig = { identity_mode: 'email' };
+    mockGetCourseConfig.mockClear();
   });
 
   test('accepts a valid baseline submission and returns a completion code', async () => {
@@ -132,6 +143,19 @@ describe('POST /api/responses', () => {
     const body = { ...validBaselineBody(), module: 99 };
     const res = await request(app).post('/api/responses').send(body);
     expect(res.status).toBe(404);
+  });
+
+  test('accepts a course with no courses.json entry, defaulting to email mode', async () => {
+    mockGetCourseConfig.mockReturnValueOnce(null); // unknown course, no config entry
+    const res = await request(app).post('/api/responses').send(validBaselineBody());
+    expect(res.status).toBe(200);
+  });
+
+  test('returns 501 when the configured identity_mode is not "email"', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const res = await request(app).post('/api/responses').send(validBaselineBody());
+    expect(res.status).toBe(501);
+    expect(mockInsertResponse).not.toHaveBeenCalled();
   });
 
   test('requires extras for a debrief submission', async () => {
