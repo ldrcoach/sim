@@ -205,6 +205,93 @@ function SubscaleScreen({ subscale, scaleLabels, answers, onAnswer, onNext, onBa
   );
 }
 
+function PostExperienceScreen({ items, scaleLabels, answers, onAnswer, onNext, onBack }) {
+  const allAnswered = items.every((item) => answers[item.id] != null);
+  const [triedNext, setTriedNext] = useState(false);
+
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px" }}>
+      <p aria-live="polite" style={{ fontSize: 13, color: C.midGray, marginBottom: 8 }}>
+        Reflecting on the module
+      </p>
+      <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 16 }}>Post-Experience Reflection</h2>
+
+      {items.map((item) => (
+        <LikertItem key={item.id} item={item} value={answers[item.id]} onChange={onAnswer} scaleLabels={scaleLabels} />
+      ))}
+
+      {triedNext && !allAnswered && (
+        <p role="alert" style={{ color: C.danger, fontSize: 13, margin: "12px 0" }}>
+          Please answer every item before continuing.
+        </p>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20 }}>
+        <button onClick={onBack} style={{ padding: "10px 20px", borderRadius: 6, border: `1px solid ${C.lightGray}`, background: C.white, minHeight: 44 }}>
+          Back
+        </button>
+        <button
+          onClick={() => (allAnswered ? onNext() : setTriedNext(true))}
+          style={{ padding: "10px 24px", borderRadius: 6, border: "none", minHeight: 44, background: C.navy, color: C.white, cursor: "pointer" }}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OpenEndedScreen({ prompts, answers, onAnswer, onNext, onBack }) {
+  const MIN_LENGTH = 40;
+  const allValid = prompts.every((p) => (answers[p.id] || "").trim().length >= MIN_LENGTH);
+  const [triedNext, setTriedNext] = useState(false);
+
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px" }}>
+      <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 16 }}>A Few Reflection Questions</h2>
+
+      {prompts.map((p) => {
+        const text = answers[p.id] || "";
+        const tooShort = text.trim().length < MIN_LENGTH;
+        return (
+          <div key={p.id} style={{ marginBottom: 24 }}>
+            <label htmlFor={p.id} style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
+              {p.prompt}
+            </label>
+            <textarea
+              id={p.id}
+              value={text}
+              onChange={(e) => onAnswer(p.id, e.target.value)}
+              rows={4}
+              style={{
+                width: "100%", padding: 10, fontSize: 15, borderRadius: 6,
+                border: `1px solid ${triedNext && tooShort ? C.danger : C.lightGray}`,
+                fontFamily: "inherit",
+              }}
+              aria-describedby={`${p.id}-count`}
+            />
+            <p id={`${p.id}-count`} style={{ fontSize: 12, color: tooShort ? C.danger : C.midGray, marginTop: 4 }}>
+              {text.trim().length} / {MIN_LENGTH} characters minimum
+            </p>
+          </div>
+        );
+      })}
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
+        <button onClick={onBack} style={{ padding: "10px 20px", borderRadius: 6, border: `1px solid ${C.lightGray}`, background: C.white, minHeight: 44 }}>
+          Back
+        </button>
+        <button
+          onClick={() => (allValid ? onNext() : setTriedNext(true))}
+          style={{ padding: "10px 24px", borderRadius: 6, border: "none", minHeight: 44, background: C.navy, color: C.white, cursor: "pointer" }}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function CheckIn({ moduleNum, phase }) {
   const course = "OBLD500";
   const [status, setStatus] = useState("loading"); // loading | error | intro | subscale
@@ -213,6 +300,8 @@ export default function CheckIn({ moduleNum, phase }) {
   const [email, setEmail] = useState("");
   const [answers, setAnswers] = useState({});
   const [subscaleIndex, setSubscaleIndex] = useState(0);
+  const [pxAnswers, setPxAnswers] = useState({});
+  const [openAnswers, setOpenAnswers] = useState({});
 
   const loadInstrument = useCallback(async () => {
     setStatus("loading");
@@ -273,7 +362,25 @@ export default function CheckIn({ moduleNum, phase }) {
           }}
         />
       )}
-      {status === "post-experience" && <LoadingScreen />}
+      {status === "post-experience" && (
+        <PostExperienceScreen
+          items={instrument.debrief_extras.post_experience.items}
+          scaleLabels={instrument.scale.labels}
+          answers={pxAnswers}
+          onAnswer={(id, v) => setPxAnswers((prev) => ({ ...prev, [id]: v }))}
+          onBack={() => setStatus("subscale")}
+          onNext={() => setStatus("open-ended")}
+        />
+      )}
+      {status === "open-ended" && (
+        <OpenEndedScreen
+          prompts={instrument.debrief_extras.open_ended}
+          answers={openAnswers}
+          onAnswer={(id, v) => setOpenAnswers((prev) => ({ ...prev, [id]: v }))}
+          onBack={() => setStatus("post-experience")}
+          onNext={() => setStatus("review")}
+        />
+      )}
       {status === "review" && <LoadingScreen />}
     </>
   );
