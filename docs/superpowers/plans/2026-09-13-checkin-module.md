@@ -1926,12 +1926,14 @@ git commit -m "feat: add check-in API routes (GET instrument, POST responses)"
 
 ---
 
-### Task 10: Boot-time wiring (schema init, instrument load, fail-fast)
+### Task 10: Boot-time wiring (schema init, instrument load, loud non-fatal validation)
 
 **Files:**
 - Modify: `server/index.js`
 
-This task makes the server actually initialize check-in's Postgres schema and load+validate instruments at startup, failing loudly (not silently) if instruments are broken -- matching the spec's "validator at load time" intent.
+This task makes the server actually initialize check-in's Postgres schema and load+validate instruments at startup, logging loudly (not silently) if instruments are broken.
+
+**Important, learned the hard way in this session's own execution:** do NOT `process.exit(1)` on a bad instrument file. Sim is a live production app serving real ERAU students, and chat/sessions/the SPA don't depend on instrument files at all -- crashing the whole process over a check-in-only content error (the kind of typo likely during the future migration of the other 9 instrument files, hand-authored content with no CI gate blocking a bad deploy) takes down the entire app over a fault confined to one new, additive feature. Express 4 already catches synchronous throws inside route handlers and returns a 500 for just that request, so log loudly and keep booting -- check-in's own two routes degrade to per-request 500s until the file is fixed and redeployed, exactly like the app already handles Postgres being unavailable (503, not a crash) for the DB-backed routes.
 
 - [ ] **Step 1: Add the instrument loader require**
 
@@ -1966,33 +1968,49 @@ if (require.main === module) {
     instrumentLoader.load();
     console.log('[CheckIn] Instruments loaded and validated');
   } catch (err) {
-    console.error('[CheckIn] Instrument validation failed at boot:', err.message);
-    process.exit(1);
+    // Do not process.exit here: a bad instrument JSON file should only take
+    // down the check-in feature, not the whole app (chat, sessions, SPA).
+    // Check-in's own routes will 500 per-request until this is fixed and
+    // redeployed -- Express 4 catches the synchronous throw from a later
+    // ensureLoaded() retry inside the route handler, so it degrades to a
+    // per-request error rather than crashing the process.
+    console.error('[CheckIn] Instrument validation failed at boot -- check-in endpoints will error until this is fixed and redeployed:', err.message);
   }
 
-  Promise.all([initSchema(), checkinDb.initCheckinSchema()]).then(() => {
-    app.listen(PORT, () => {
-      console.log(`OBLD 500 Simulation Suite running on port ${PORT}`);
+  Promise.all([initSchema(), checkinDb.initCheckinSchema()])
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`OBLD 500 Simulation Suite running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('[Boot] Unexpected error during startup:', err);
+      process.exit(1);
     });
-  });
 }
 ```
+
+The trailing `.catch()` on `Promise.all(...).then(...)` is defensive symmetry: `initSchema()` and `checkinDb.initCheckinSchema()` both already swallow their own errors internally and always resolve (never reject), so this can't fire today -- but if that ever changes, an unhandled rejection here would otherwise silently hang the server with no log line and no listener ever starting. A genuinely unexpected startup failure at this layer (as opposed to a known, already-handled "no DATABASE_URL" case) is a different risk category from a bad instrument file, and `process.exit(1)` here is the right call for it.
 
 - [ ] **Step 3: Run the full test suite**
 
 Run: `cd server && npm test`
 Expected: all suites still pass. (Tests import `index.js` without `require.main === module` being true under Jest, so this boot block does not run during tests -- consistent with how `initSchema()` already worked before this change.)
 
-- [ ] **Step 4: Manually verify the fail-fast behavior**
+- [ ] **Step 4: Manually verify the degraded (non-fatal) behavior**
 
-Run: `cd server && CHECKIN_INSTRUMENT_DIR=/nonexistent node index.js`
-Expected: process exits immediately with `[CheckIn] Instrument validation failed at boot:` and a non-zero exit code (verify with `echo $?` on the next line, expect `1`).
+Run: `cd server && CHECKIN_INSTRUMENT_DIR=/nonexistent node index.js &` (background it).
+Expected: the process logs `[CheckIn] Instrument validation failed at boot -- check-in endpoints will error until this is fixed and redeployed:` followed by an ENOENT message, THEN still logs the normal `OBLD 500 Simulation Suite running on port 3000` line and keeps running (confirm with `ps` or similar that it's still alive, not exited).
+
+While it's running, confirm the failure is genuinely scoped: `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/api/instrument/OBLD500/4/baseline` should print `500` (check-in's own route failing per-request, as expected), while `curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/log -H "Content-Type: application/json" -d '{}'` should print `200` (an unrelated existing route, completely unaffected). Then stop the background process.
+
+Also re-verify the successful-boot case still works: `cd server && CHECKIN_HMAC_SECRET=test CHECKIN_AES_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))") node index.js &` (default, valid instruments dir) should log `[CheckIn] Instruments loaded and validated` then the normal startup line. Stop it afterward.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add server/index.js
-git commit -m "feat: load and validate check-in instruments at boot, fail fast on error"
+git commit -m "feat: load and validate check-in instruments at boot, degrade check-in only on error"
 ```
 
 ---
