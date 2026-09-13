@@ -2348,7 +2348,7 @@ git commit -m "feat: add check-in Intro screen and ?week=/mode= URL entry point"
 In `client/src/CheckIn.jsx`, add these components above `export default function CheckIn`:
 
 ```jsx
-function LikertItem({ item, value, onChange, scaleLabels }) {
+function LikertItem({ item, value, onChange, scaleLabels, firstInputRef }) {
   return (
     <fieldset style={{ border: "none", borderBottom: `1px solid ${C.lightGray}`, padding: "16px 0", margin: 0 }}>
       <legend style={{ fontSize: 16, marginBottom: 12, padding: 0 }}>{item.text}</legend>
@@ -2369,6 +2369,7 @@ function LikertItem({ item, value, onChange, scaleLabels }) {
             >
               <input
                 id={inputId}
+                ref={i === 0 ? firstInputRef : undefined}
                 type="radio"
                 name={item.id}
                 value={optionValue}
@@ -2389,11 +2390,23 @@ function SubscaleScreen({ subscale, scaleLabels, answers, onAnswer, onNext, onBa
   const allAnswered = subscale.items.every((item) => answers[item.id] != null);
   const [triedNext, setTriedNext] = useState(false);
   const firstUnansweredRef = useRef(null);
+  const firstUnansweredItem = subscale.items.find((item) => answers[item.id] == null);
+  const firstUnansweredId = firstUnansweredItem ? firstUnansweredItem.id : null;
+
+  // Focus must move AFTER React commits the DOM, not during the click handler
+  // (the ref for the just-revealed error state isn't populated yet at that
+  // point) or via a ref read during render (which reflects the previous
+  // commit, not this one). A useEffect keyed on the derived "first
+  // unanswered" value is what actually works here.
+  useEffect(() => {
+    if (triedNext && firstUnansweredId && firstUnansweredRef.current) {
+      firstUnansweredRef.current.focus();
+    }
+  }, [triedNext, firstUnansweredId]);
 
   const handleNext = () => {
     if (!allAnswered) {
       setTriedNext(true);
-      if (firstUnansweredRef.current) firstUnansweredRef.current.focus();
       return;
     }
     onNext();
@@ -2407,15 +2420,15 @@ function SubscaleScreen({ subscale, scaleLabels, answers, onAnswer, onNext, onBa
       <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 4 }}>{subscale.name}</h2>
       <p style={{ color: C.textSec, marginBottom: 16 }}>{subscale.help}</p>
 
-      {subscale.items.map((item, i) => (
-        <div key={item.id} ref={triedNext && answers[item.id] == null && !firstUnansweredRef.current ? firstUnansweredRef : null}>
-          <LikertItem
-            item={item}
-            value={answers[item.id]}
-            onChange={onAnswer}
-            scaleLabels={scaleLabels}
-          />
-        </div>
+      {subscale.items.map((item) => (
+        <LikertItem
+          key={item.id}
+          item={item}
+          value={answers[item.id]}
+          onChange={onAnswer}
+          scaleLabels={scaleLabels}
+          firstInputRef={item.id === firstUnansweredId ? firstUnansweredRef : undefined}
+        />
       ))}
 
       {triedNext && !allAnswered && (
@@ -2442,6 +2455,8 @@ function SubscaleScreen({ subscale, scaleLabels, answers, onAnswer, onNext, onBa
   );
 }
 ```
+
+An earlier draft of this task focused a wrapper `<div>` synchronously inside the click handler, read via `ref.current` during render. Neither works: the div has no `tabIndex` so it can't receive programmatic focus at all, and reading `.current` during render reflects the previous commit, not the one in progress -- confirmed non-functional by driving the app in a real browser during code review. The version above fixes both by targeting an actual focusable element (the first radio input, via `LikertItem`'s new `firstInputRef` prop) and moving the `.focus()` call into a `useEffect` that runs after commit.
 
 Add `useRef` to the existing React import at the top of the file:
 
@@ -2517,6 +2532,7 @@ export default function CheckIn({ moduleNum, phase }) {
       )}
       {status === "subscale" && (
         <SubscaleScreen
+          key={instrument.subscales[subscaleIndex].id}
           subscale={instrument.subscales[subscaleIndex]}
           scaleLabels={instrument.scale.labels}
           answers={answers}
