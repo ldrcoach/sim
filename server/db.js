@@ -4,9 +4,12 @@ let pool = null;
 
 function getPool() {
   if (!pool && process.env.DATABASE_URL) {
+    // TLS mode (e.g. sslmode=require) comes from DATABASE_URL itself, which
+    // gives us certificate verification against Node's trusted CA store.
+    // Do not override it with a `ssl: { rejectUnauthorized: false }` object --
+    // that disables certificate verification entirely.
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     });
   }
   return pool;

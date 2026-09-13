@@ -7,6 +7,11 @@ const { getPool, isAvailable, initSchema } = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Azure Container Apps ingress sits in front of us as a single reverse proxy
+// hop; trust its X-Forwarded-For so express-rate-limit keys on the real
+// client IP instead of the proxy's.
+app.set('trust proxy', 1);
+
 app.use(express.json({ limit: '1mb' }));
 
 // General rate limit: 100 requests per 15 minutes per IP
