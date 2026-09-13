@@ -1,10 +1,11 @@
 const request = require('supertest');
 
+let mockAvailable = true;
 const mockFindResponseByCompletionCode = jest.fn();
 const mockGetSummary = jest.fn();
 
 jest.mock('../checkin/db', () => ({
-  isAvailable: () => true,
+  isAvailable: () => mockAvailable,
   findResponseByCompletionCode: (...args) => mockFindResponseByCompletionCode(...args),
   getSummary: (...args) => mockGetSummary(...args),
 }));
@@ -27,6 +28,7 @@ describe('admin routes', () => {
 
   beforeEach(() => {
     process.env.CHECKIN_ADMIN_TOKEN = ADMIN_TOKEN;
+    mockAvailable = true;
     app = buildApp();
     mockFindResponseByCompletionCode.mockReset();
     mockGetSummary.mockReset();
@@ -86,6 +88,28 @@ describe('admin routes', () => {
     test('returns 400 when course is missing', async () => {
       const res = await request(app).get('/api/admin/summary').set('X-Admin-Token', ADMIN_TOKEN);
       expect(res.status).toBe(400);
+    });
+
+    test('returns 500 with a generic error when the db call throws', async () => {
+      mockGetSummary.mockRejectedValueOnce(new Error('connection refused: some.internal.hostname:5432'));
+      const res = await request(app)
+        .get('/api/admin/summary?course=OBLD500')
+        .set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: 'Internal error' });
+      expect(JSON.stringify(res.body)).not.toContain('some.internal.hostname');
+    });
+  });
+
+  describe('db availability guard', () => {
+    test('returns 503 with a clean error when the database is not configured', async () => {
+      mockAvailable = false;
+      const res = await request(app)
+        .get('/api/admin/verify?code=AL4-B-K7Q2M9PX')
+        .set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(503);
+      expect(res.body).toEqual({ error: 'Database not configured' });
+      expect(mockFindResponseByCompletionCode).not.toHaveBeenCalled();
     });
   });
 });

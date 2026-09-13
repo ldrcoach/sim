@@ -22,6 +22,14 @@ const adminLimiter = rateLimit({
 router.use(adminLimiter);
 router.use(requireAdminToken);
 
+function requireDb(req, res, next) {
+  if (!checkinDb.isAvailable()) {
+    return res.status(503).json({ error: 'Database not configured' });
+  }
+  next();
+}
+router.use(requireDb);
+
 router.get('/verify', async (req, res) => {
   try {
     const { code } = req.query;
@@ -40,7 +48,8 @@ router.get('/verify', async (req, res) => {
       submitted_at: match.submitted_at,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[Admin] verify lookup failed:', err.message);
+    res.status(500).json({ error: 'Internal error' });
   }
 });
 
@@ -53,7 +62,8 @@ router.get('/summary', async (req, res) => {
     const summary = await checkinDb.getSummary(course);
     res.json({ course, summary });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[Admin] summary lookup failed:', err.message);
+    res.status(500).json({ error: 'Internal error' });
   }
 });
 
