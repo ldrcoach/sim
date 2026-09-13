@@ -208,6 +208,23 @@ function SubscaleScreen({ subscale, scaleLabels, answers, onAnswer, onNext, onBa
 function PostExperienceScreen({ items, scaleLabels, answers, onAnswer, onNext, onBack }) {
   const allAnswered = items.every((item) => answers[item.id] != null);
   const [triedNext, setTriedNext] = useState(false);
+  const firstUnansweredRef = useRef(null);
+  const firstUnansweredItem = items.find((item) => answers[item.id] == null);
+  const firstUnansweredId = firstUnansweredItem ? firstUnansweredItem.id : null;
+
+  useEffect(() => {
+    if (triedNext && firstUnansweredId && firstUnansweredRef.current) {
+      firstUnansweredRef.current.focus();
+    }
+  }, [triedNext, firstUnansweredId]);
+
+  const handleNext = () => {
+    if (!allAnswered) {
+      setTriedNext(true);
+      return;
+    }
+    onNext();
+  };
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px" }}>
@@ -217,7 +234,14 @@ function PostExperienceScreen({ items, scaleLabels, answers, onAnswer, onNext, o
       <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 16 }}>Post-Experience Reflection</h2>
 
       {items.map((item) => (
-        <LikertItem key={item.id} item={item} value={answers[item.id]} onChange={onAnswer} scaleLabels={scaleLabels} />
+        <LikertItem
+          key={item.id}
+          item={item}
+          value={answers[item.id]}
+          onChange={onAnswer}
+          scaleLabels={scaleLabels}
+          firstInputRef={item.id === firstUnansweredId ? firstUnansweredRef : undefined}
+        />
       ))}
 
       {triedNext && !allAnswered && (
@@ -231,7 +255,7 @@ function PostExperienceScreen({ items, scaleLabels, answers, onAnswer, onNext, o
           Back
         </button>
         <button
-          onClick={() => (allAnswered ? onNext() : setTriedNext(true))}
+          onClick={handleNext}
           style={{ padding: "10px 24px", borderRadius: 6, border: "none", minHeight: 44, background: C.navy, color: C.white, cursor: "pointer" }}
         >
           Next
