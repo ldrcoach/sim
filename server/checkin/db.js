@@ -192,6 +192,40 @@ async function getSummary(course) {
   return result.rows;
 }
 
+async function getExportLongRows(course) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT cr.id AS response_id, cr.course, cr.module, cr.phase, cr.participant_id,
+            cr.instrument_version, cr.started_at, cr.submitted_at, cr.straightline_flag,
+            cr.completion_code, cri.item_id, cri.raw_value, cri.scored_value
+     FROM checkin_responses cr
+     JOIN checkin_response_items cri ON cri.response_id = cr.id
+     WHERE cr.course = $1
+     ORDER BY cr.id, cri.item_id`,
+    [course]
+  );
+  return result.rows;
+}
+
+async function getExportPairedRows(course) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT cr.participant_id, cr.module, cr.phase, css.subscale_id, css.mean
+     FROM checkin_responses cr
+     JOIN checkin_subscale_scores css ON css.response_id = cr.id
+     WHERE cr.course = $1
+       AND cr.id = (
+         SELECT id FROM checkin_responses cr2
+         WHERE cr2.participant_id = cr.participant_id AND cr2.course = cr.course
+           AND cr2.module = cr.module AND cr2.phase = cr.phase
+         ORDER BY submitted_at DESC, id DESC LIMIT 1
+       )
+     ORDER BY cr.participant_id, cr.module, css.subscale_id, cr.phase`,
+    [course]
+  );
+  return result.rows;
+}
+
 module.exports = {
   isAvailable,
   initCheckinSchema,
@@ -203,4 +237,6 @@ module.exports = {
   purgeParticipantEmails,
   findResponseByCompletionCode,
   getSummary,
+  getExportLongRows,
+  getExportPairedRows,
 };

@@ -175,3 +175,28 @@ describe('getSummary', () => {
     expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('GROUP BY module, phase'), ['OBLD500']);
   });
 });
+
+describe('getExportLongRows', () => {
+  test('returns one row per response item, joined with response metadata', async () => {
+    const rows = [
+      { response_id: 1, course: 'OBLD500', module: 4, phase: 'baseline', participant_id: 'p1', item_id: 'AL01', raw_value: 5, scored_value: 5 },
+    ];
+    mockQuery.mockResolvedValueOnce({ rows });
+    const result = await checkinDb.getExportLongRows('OBLD500');
+    expect(result).toEqual(rows);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('JOIN checkin_response_items'), ['OBLD500']);
+  });
+});
+
+describe('getExportPairedRows', () => {
+  test('returns raw participant/module/subscale/phase/mean rows for pivoting', async () => {
+    const rows = [
+      { participant_id: 'p1', module: 4, phase: 'baseline', subscale_id: 'sensing', mean: '5.00' },
+      { participant_id: 'p1', module: 4, phase: 'debrief', subscale_id: 'sensing', mean: '6.00' },
+    ];
+    mockQuery.mockResolvedValueOnce({ rows });
+    const result = await checkinDb.getExportPairedRows('OBLD500');
+    expect(result).toEqual(rows);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('JOIN checkin_subscale_scores'), ['OBLD500']);
+  });
+});
