@@ -145,3 +145,33 @@ describe('purgeParticipantEmails', () => {
     expect(mockQuery).not.toHaveBeenCalled();
   });
 });
+
+describe('findResponseByCompletionCode', () => {
+  test('returns the matching response row', async () => {
+    mockQuery.mockResolvedValueOnce({
+      rows: [{ course: 'OBLD500', module: 4, phase: 'baseline', submitted_at: '2027-01-15T00:00:00Z' }],
+    });
+    const match = await checkinDb.findResponseByCompletionCode('AL4-B-K7Q2M9PX');
+    expect(match).toEqual({ course: 'OBLD500', module: 4, phase: 'baseline', submitted_at: '2027-01-15T00:00:00Z' });
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('WHERE completion_code = $1'), ['AL4-B-K7Q2M9PX']);
+  });
+
+  test('returns null when no response matches', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    const match = await checkinDb.findResponseByCompletionCode('NOT-A-REAL-CODE');
+    expect(match).toBeNull();
+  });
+});
+
+describe('getSummary', () => {
+  test('returns per module/phase counts', async () => {
+    const rows = [
+      { module: 4, phase: 'baseline', total: 10, straightline_count: 1, last_submission: '2027-01-20T00:00:00Z' },
+      { module: 4, phase: 'debrief', total: 8, straightline_count: 0, last_submission: '2027-03-01T00:00:00Z' },
+    ];
+    mockQuery.mockResolvedValueOnce({ rows });
+    const summary = await checkinDb.getSummary('OBLD500');
+    expect(summary).toEqual(rows);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('GROUP BY module, phase'), ['OBLD500']);
+  });
+});

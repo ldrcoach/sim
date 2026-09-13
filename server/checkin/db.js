@@ -168,6 +168,30 @@ async function purgeParticipantEmails(participantIds) {
   return result.rowCount;
 }
 
+async function findResponseByCompletionCode(code) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT course, module, phase, submitted_at FROM checkin_responses WHERE completion_code = $1`,
+    [code]
+  );
+  return result.rows.length ? result.rows[0] : null;
+}
+
+async function getSummary(course) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT module, phase, count(*)::int AS total,
+            count(*) FILTER (WHERE straightline_flag)::int AS straightline_count,
+            max(submitted_at) AS last_submission
+     FROM checkin_responses
+     WHERE course = $1
+     GROUP BY module, phase
+     ORDER BY module, phase`,
+    [course]
+  );
+  return result.rows;
+}
+
 module.exports = {
   isAvailable,
   initCheckinSchema,
@@ -177,4 +201,6 @@ module.exports = {
   recordInstrumentVersion,
   findParticipantIdsWithEmailByCourse,
   purgeParticipantEmails,
+  findResponseByCompletionCode,
+  getSummary,
 };
