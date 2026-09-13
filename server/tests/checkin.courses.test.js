@@ -77,4 +77,48 @@ describe('courses.js', () => {
     );
     expect(() => courses.load(path.join(tmpDir, 'bad-retention.json'))).toThrow(/retention_days_after_end/);
   });
+
+  test('throws with the file path and underlying error when courses.json is malformed', () => {
+    const badPath = path.join(tmpDir, 'malformed.json');
+    fs.writeFileSync(badPath, '{ this is not valid json');
+    expect(() => courses.load(badPath)).toThrow(/malformed\.json/);
+  });
+
+  describe('validateCourseConfig', () => {
+    test('returns an empty array for a fully valid config', () => {
+      const errors = courses.validateCourseConfig('OBLD500', {
+        course_code: 'OBLD-500-2027',
+        identity_mode: 'email',
+        email_domain_hint: 'example.edu',
+        course_end_date: '2027-03-14',
+        retention_days_after_end: 90,
+        allow_embed: true,
+      });
+      expect(errors).toEqual([]);
+    });
+
+    test('rejects an identity_mode value outside the allowed enum', () => {
+      const errors = courses.validateCourseConfig('OBLD500', {
+        course_code: 'OBLD-500-2027',
+        identity_mode: 'sso',
+        email_domain_hint: 'example.edu',
+        course_end_date: '2027-03-14',
+        retention_days_after_end: 90,
+        allow_embed: true,
+      });
+      expect(errors.some((e) => e.includes('identity_mode'))).toBe(true);
+    });
+
+    test('accepts the "key" and "none" identity_mode values', () => {
+      const base = {
+        course_code: 'OBLD-500-2027',
+        email_domain_hint: 'example.edu',
+        course_end_date: '2027-03-14',
+        retention_days_after_end: 90,
+        allow_embed: true,
+      };
+      expect(courses.validateCourseConfig('X', { ...base, identity_mode: 'key' })).toEqual([]);
+      expect(courses.validateCourseConfig('X', { ...base, identity_mode: 'none' })).toEqual([]);
+    });
+  });
 });

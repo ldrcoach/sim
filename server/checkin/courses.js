@@ -15,6 +15,8 @@ function validateCourseConfig(course, cfg) {
   }
   if (!cfg.identity_mode || typeof cfg.identity_mode !== 'string') {
     errors.push(`${course}.identity_mode is required and must be a string`);
+  } else if (!['email', 'key', 'none'].includes(cfg.identity_mode)) {
+    errors.push(`${course}.identity_mode must be one of "email", "key", "none"`);
   }
   if (!cfg.email_domain_hint || typeof cfg.email_domain_hint !== 'string') {
     errors.push(`${course}.email_domain_hint is required and must be a string`);
@@ -34,7 +36,12 @@ function validateCourseConfig(course, cfg) {
 function load(filePath) {
   const targetPath = filePath || process.env.CHECKIN_COURSES_FILE || DEFAULT_PATH;
   const raw = fs.readFileSync(targetPath, 'utf8');
-  const data = JSON.parse(raw);
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`${targetPath}: invalid JSON (${err.message})`);
+  }
 
   const allErrors = [];
   Object.entries(data).forEach(([course, cfg]) => {
@@ -63,4 +70,4 @@ function getAllCourseConfigs() {
   return config;
 }
 
-module.exports = { load, ensureLoaded, getCourseConfig, getAllCourseConfigs };
+module.exports = { load, ensureLoaded, getCourseConfig, getAllCourseConfigs, validateCourseConfig };
