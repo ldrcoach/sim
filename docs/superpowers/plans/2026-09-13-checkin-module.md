@@ -3082,7 +3082,7 @@ app.get('/privacy', (req, res) => {
 <body>
   <h1>Privacy Statement</h1>
   <p>This page explains what happens to your responses when you complete a
-  Baseline Check or Debrief in the OBLD 500 check-in module.</p>
+  Baseline Check or Debrief in the OBLD 500 check-in module, administered by LDRC.</p>
 
   <h2>What is collected</h2>
   <p>Your ERAU email address, your answers to the questionnaire items, and,
@@ -3102,9 +3102,9 @@ app.get('/privacy', (req, res) => {
   responses are not part of your grade.</p>
 
   <h2>How long</h2>
-  <p>Your email is kept only for the duration of the course, then deleted.
-  Your questionnaire responses (not tied to your name after that point) are
-  kept for course improvement purposes.</p>
+  <p>Your email and responses are stored securely for as long as they are
+  useful for course measurement. You can ask your course developer to
+  delete your data at any time -- see "How to ask for deletion" below.</p>
 
   <h2>How to ask for deletion</h2>
   <p>Email your course developer at any time to ask that your responses be
@@ -3115,6 +3115,8 @@ app.get('/privacy', (req, res) => {
 </html>`);
 });
 ```
+
+Two things about the text above are corrections, not the original draft: the intro paragraph names LDRC explicitly (the test's own `/LDRC/` assertion required it, and the first draft of this page never mentioned it by name -- a bug in the task itself, caught when the test predictably failed for the right reason), and "How long" no longer promises automatic deletion at course end. That promise isn't backed by any code in this plan -- the retention purge job is explicitly deferred (see the deviations list at the top of this document) -- so the wording above only describes what's actually true today: data is retained, and deletion happens if a human acts on a request, not automatically.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
