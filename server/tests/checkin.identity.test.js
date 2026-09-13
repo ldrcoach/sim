@@ -56,6 +56,11 @@ describe('encryptEmail / decryptEmail', () => {
     expect(() => encryptEmail('student@erau.edu', 'dG9vc2hvcnQ=')).toThrow(/32 bytes/);
   });
 
+  test('decryptEmail throws when the key does not decode to 32 bytes', () => {
+    const encrypted = encryptEmail('student@erau.edu', KEY);
+    expect(() => decryptEmail(encrypted, 'dG9vc2hvcnQ=')).toThrow(/32 bytes/);
+  });
+
   test('fails to decrypt with the wrong key', () => {
     const encrypted = encryptEmail('student@erau.edu', KEY);
     const wrongKey = Buffer.alloc(32, 7).toString('base64');

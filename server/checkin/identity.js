@@ -19,8 +19,14 @@ function encryptEmail(email, keyBase64) {
 
 function decryptEmail(encrypted, keyBase64) {
   const key = Buffer.from(keyBase64, 'base64');
+  if (key.length !== 32) {
+    throw new Error('CHECKIN_AES_KEY must decode to exactly 32 bytes (AES-256)');
+  }
   const [ivB64, tagB64, ciphertextB64] = encrypted.split(':');
   const iv = Buffer.from(ivB64, 'base64');
+  if (iv.length !== 12) {
+    throw new Error('Invalid ciphertext: IV must be 12 bytes');
+  }
   const authTag = Buffer.from(tagB64, 'base64');
   const ciphertext = Buffer.from(ciphertextB64, 'base64');
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
