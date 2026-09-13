@@ -2184,7 +2184,7 @@ function IntroScreen({ instrument, moduleNum, phase, email, setEmail, onStart })
           border: `1px solid ${touched && !emailValid ? C.danger : C.lightGray}`,
           marginBottom: 6,
         }}
-        aria-describedby="email-error"
+        aria-describedby={touched && !emailValid ? "email-error" : undefined}
       />
       {touched && !emailValid && (
         <p id="email-error" style={{ color: C.danger, fontSize: 13, marginBottom: 12 }}>
@@ -2234,7 +2234,7 @@ export default function CheckIn({ moduleNum, phase }) {
         throw new Error(res.status === 404 ? "No check-in found for this module." : `Error ${res.status}`);
       }
       const data = await res.json();
-      setInstrument({ ...data, intro: data.intro });
+      setInstrument(data);
       setStatus("intro");
     } catch (err) {
       setErrorMessage(err.message);
@@ -2268,10 +2268,10 @@ In `client/src/App.jsx`, add the import near the top (after the existing `import
 import CheckIn from "./CheckIn";
 ```
 
-Inside `export default function App() {`, right after the existing `const [view, setView] = useState("landing");` line, add the query-param parsing (runs once, on first render):
+First, add a module-scope helper function above `export default function App() {` (near the other top-level constants like `WEEK_ORDER`), so the URL-parsing rule lives in exactly one place rather than being duplicated across the two `useState` initializers below:
 
 ```javascript
-const [checkinParams] = useState(() => {
+function parseCheckinParams() {
   const params = new URLSearchParams(window.location.search);
   const week = params.get("week");
   const mode = params.get("mode");
@@ -2279,7 +2279,13 @@ const [checkinParams] = useState(() => {
     return { moduleNum: Number(week), phase: mode };
   }
   return null;
-});
+}
+```
+
+Inside `export default function App() {`, right after the existing `const [view, setView] = useState("landing");` line, add the query-param parsing (runs once, on first render):
+
+```javascript
+const [checkinParams] = useState(() => parseCheckinParams());
 ```
 
 Then change the initial view: replace
@@ -2291,15 +2297,10 @@ const [view, setView] = useState("landing");
 with
 
 ```javascript
-const [view, setView] = useState(() => {
-  const params = new URLSearchParams(window.location.search);
-  const week = params.get("week");
-  const mode = params.get("mode");
-  return week && (mode === "baseline" || mode === "debrief") ? "checkin" : "landing";
-});
+const [view, setView] = useState(() => (parseCheckinParams() ? "checkin" : "landing"));
 ```
 
-(Both `useState` calls read `window.location.search` independently since it does not change during the component's lifetime for this flow -- this avoids a stale closure between the two states.)
+(Both `useState` initializers call `parseCheckinParams()` independently since `window.location.search` does not change during the component's lifetime for this flow -- this avoids a stale closure between the two states, while keeping the actual parsing rule in one shared function instead of two copies that could silently drift apart.)
 
 Finally, in the return block, add a `checkin` branch. Find:
 
