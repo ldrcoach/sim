@@ -74,7 +74,7 @@ README.md, CLAUDE.md          MODIFY: document the new endpoints and env vars
 - Modify: `server/tests/setup.js`
 - Create: `server/checkin/instruments/` (directory, populated in Task 3)
 
-- [ ] **Step 1: Add check-in secrets to the test environment**
+- [x] **Step 1: Add check-in secrets to the test environment**
 
 Open `server/tests/setup.js` and add these two lines after the existing `process.env.NODE_ENV = 'test';` line:
 
@@ -86,16 +86,16 @@ process.env.CHECKIN_AES_KEY = 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY='; //
 
 The AES key above is the base64 encoding of the 32-byte ASCII string `0123456789abcdef0123456789abcdef` -- fixed and non-secret, used only in tests.
 
-- [ ] **Step 2: Verify the existing suite still passes**
+- [x] **Step 2: Verify the existing suite still passes**
 
 Run: `cd server && npm test`
 Expected: `Test Suites: 3 passed, 3 total` / `Tests: 32 passed, 32 total` (same as before -- this step only adds unused env vars so far).
 
-- [ ] **Step 3: Create the instruments directory**
+- [x] **Step 3: Create the instruments directory**
 
 Run: `mkdir -p server/checkin/instruments`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add server/tests/setup.js
@@ -110,7 +110,7 @@ git commit -m "test: add check-in module secrets to test environment"
 - Create: `server/checkin/instrumentValidator.js`
 - Test: `server/tests/checkin.instrumentValidator.test.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/tests/checkin.instrumentValidator.test.js`:
 
@@ -288,12 +288,12 @@ describe('validateInstrument', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd server && npx jest tests/checkin.instrumentValidator.test.js`
 Expected: FAIL with `Cannot find module '../checkin/instrumentValidator'`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `server/checkin/instrumentValidator.js`:
 
@@ -433,12 +433,12 @@ function validateInstrument(data) {
 module.exports = { validateInstrument };
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `cd server && npx jest tests/checkin.instrumentValidator.test.js`
 Expected: `Tests: 11 passed, 11 total`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/checkin/instrumentValidator.js server/tests/checkin.instrumentValidator.test.js
@@ -452,7 +452,7 @@ git commit -m "feat: add check-in instrument validator"
 **Files:**
 - Create: `server/checkin/instruments/AL.json`
 
-- [ ] **Step 1: Write the fixture instrument**
+- [x] **Step 1: Write the fixture instrument**
 
 Create `server/checkin/instruments/AL.json`. This is development/test content -- realistic, but not the real vetted OBLD 500 instrument (that arrives via the separate migration step). It reuses the two example Sensing items and the five Post-Experience items and three open-ended prompts verbatim from the source spec, since those are real spec content, and adds 18 more items across three more subscales to reach 20 with 4 reverse-scored items.
 
@@ -546,7 +546,7 @@ Create `server/checkin/instruments/AL.json`. This is development/test content --
 }
 ```
 
-- [ ] **Step 2: Write a test that loads and validates this exact file**
+- [x] **Step 2: Write a test that loads and validates this exact file**
 
 Create `server/tests/checkin.instrumentLoader.test.js` (this file grows in Task 4; start it here):
 
@@ -564,12 +564,12 @@ describe('AL.json fixture', () => {
 });
 ```
 
-- [ ] **Step 3: Run the test to verify it passes**
+- [x] **Step 3: Run the test to verify it passes**
 
 Run: `cd server && npx jest tests/checkin.instrumentLoader.test.js`
 Expected: `Tests: 1 passed, 1 total`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add server/checkin/instruments/AL.json server/tests/checkin.instrumentLoader.test.js
@@ -584,7 +584,7 @@ git commit -m "feat: add Module 4 Active Listening fixture instrument"
 - Create: `server/checkin/instrumentLoader.js`
 - Modify: `server/tests/checkin.instrumentLoader.test.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `server/tests/checkin.instrumentLoader.test.js` (below the existing fixture test, same file):
 
@@ -655,12 +655,12 @@ describe('instrumentLoader', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd server && npx jest tests/checkin.instrumentLoader.test.js`
 Expected: FAIL with `Cannot find module '../checkin/instrumentLoader'`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `server/checkin/instrumentLoader.js`:
 
@@ -762,17 +762,17 @@ function reload(dir) {
 module.exports = { load, ensureLoaded, getInstrument, getPublicView, reload };
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `cd server && npx jest tests/checkin.instrumentLoader.test.js`
 Expected: `Tests: 8 passed, 8 total`
 
-- [ ] **Step 5: Run the full suite to check for regressions**
+- [x] **Step 5: Run the full suite to check for regressions**
 
 Run: `cd server && npm test`
 Expected: all suites pass (existing 32 + new instrument validator/loader tests)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/checkin/instrumentLoader.js server/tests/checkin.instrumentLoader.test.js
@@ -787,7 +787,7 @@ git commit -m "feat: add check-in instrument loader with public/private views"
 - Create: `server/checkin/identity.js`
 - Test: `server/tests/checkin.identity.test.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/tests/checkin.identity.test.js`:
 
@@ -858,12 +858,12 @@ describe('encryptEmail / decryptEmail', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd server && npx jest tests/checkin.identity.test.js`
 Expected: FAIL with `Cannot find module '../checkin/identity'`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `server/checkin/identity.js`:
 
@@ -902,12 +902,12 @@ function decryptEmail(encrypted, keyBase64) {
 module.exports = { deriveParticipantId, encryptEmail, decryptEmail };
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `cd server && npx jest tests/checkin.identity.test.js`
 Expected: `Tests: 10 passed, 10 total`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/checkin/identity.js server/tests/checkin.identity.test.js
@@ -922,7 +922,7 @@ git commit -m "feat: add check-in identity module (HMAC participant id, AES-256-
 - Create: `server/checkin/completionCode.js`
 - Test: `server/tests/checkin.completionCode.test.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/tests/checkin.completionCode.test.js`:
 
@@ -1000,12 +1000,12 @@ describe('verifyCompletionCode', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd server && npx jest tests/checkin.completionCode.test.js`
 Expected: FAIL with `Cannot find module '../checkin/completionCode'`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `server/checkin/completionCode.js`:
 
@@ -1054,14 +1054,14 @@ function verifyCompletionCode(code, args) {
 module.exports = { generateCompletionCode, verifyCompletionCode, base32Encode };
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `cd server && npx jest tests/checkin.completionCode.test.js`
 Expected: `Tests: 10 passed, 10 total`
 
 Note: the vowel-stripped base32 alphabet leaves 21 possible characters per position (26 letters + 6 digits, minus 5 vowels = 27, minus digits already excluded from vowel set so actually 21 letters + 6 digits = 27 symbols). A SHA-256 digest is long enough (52 base32 characters before stripping) that stripping ~5/26 of them still comfortably leaves 8+ characters; if this ever throws or produces a short suffix in production, that is a sign the HMAC implementation changed and needs re-checking -- add an assertion in `generateCompletionCode` in a future pass if this ever becomes a real concern. Not needed for v0.1: the test suite already proves it produces exactly 8 characters on real SHA-256 output.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/checkin/completionCode.js server/tests/checkin.completionCode.test.js
@@ -1076,7 +1076,7 @@ git commit -m "feat: add check-in completion code generation and verification"
 - Create: `server/checkin/scoring.js`
 - Test: `server/tests/checkin.scoring.test.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/tests/checkin.scoring.test.js`:
 
@@ -1145,12 +1145,12 @@ describe('isStraightline', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd server && npx jest tests/checkin.scoring.test.js`
 Expected: FAIL with `Cannot find module '../checkin/scoring'`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `server/checkin/scoring.js`:
 
@@ -1185,12 +1185,12 @@ function isStraightline(instrument, answers) {
 module.exports = { scoreItem, scoreAllItems, computeSubscaleScores, isStraightline };
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `cd server && npx jest tests/checkin.scoring.test.js`
 Expected: `Tests: 8 passed, 8 total`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/checkin/scoring.js server/tests/checkin.scoring.test.js
@@ -1207,7 +1207,7 @@ git commit -m "feat: add check-in scoring (reverse scoring, subscale means, stra
 
 This mirrors the existing `server/db.js` / `server/tests/db.test.js` pattern: mock the raw `pg` pool from `../db` and assert on the SQL text and parameters passed to `pool.query`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/tests/checkin.db.test.js`:
 
@@ -1328,12 +1328,12 @@ describe('recordInstrumentVersion', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd server && npx jest tests/checkin.db.test.js`
 Expected: FAIL with `Cannot find module '../checkin/db'`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `server/checkin/db.js`:
 
@@ -1494,12 +1494,12 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `cd server && npx jest tests/checkin.db.test.js`
 Expected: `Tests: 9 passed, 9 total`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/checkin/db.js server/tests/checkin.db.test.js
@@ -1516,7 +1516,7 @@ git commit -m "feat: add check-in Postgres schema and query helpers"
 
 Unlike Task 8, these tests mock `../checkin/db` (not the raw `../db` pool) -- `routes.js` never touches `pg` directly, only the higher-level functions from Task 8.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/tests/checkin.routes.test.js`:
 
@@ -1708,12 +1708,12 @@ describe('POST /api/responses', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd server && npx jest tests/checkin.routes.test.js`
 Expected: FAIL (route not mounted / module not found)
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `server/checkin/routes.js`:
 
@@ -1890,7 +1890,7 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
 module.exports = router;
 ```
 
-- [ ] **Step 4: Mount the router in `server/index.js`**
+- [x] **Step 4: Mount the router in `server/index.js`**
 
 Open `server/index.js`. Add the require near the top, after the existing `db` require:
 
@@ -1907,17 +1907,17 @@ app.use('/api', checkinRoutes);
 
 The exact position relative to the app's own `express.json({limit:'1mb'})` doesn't affect correctness now that the check-in router's own body limit and rate limiter are per-route middleware (see the note above `router.get('/instrument/...')` in Step 3) rather than router-level -- there's no cross-router body-parsing interaction to order around. Placing it here, right after `trust proxy`, is just about keeping new routes grouped together near the top of the file for readability.
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `cd server && npx jest tests/checkin.routes.test.js`
 Expected: `Tests: 16 passed, 16 total` (count the `test(...)` blocks in Step 1's code above if this ever drifts -- treat the actual test file as authoritative over any number stated here).
 
-- [ ] **Step 6: Run the full suite to check for regressions**
+- [x] **Step 6: Run the full suite to check for regressions**
 
 Run: `cd server && npm test`
 Expected: all suites pass, including the original 32 tests (the existing `/api/sessions` etc. routes are untouched; check-in routes are additive under the same `/api` prefix but distinct paths). Also worth adding at this point, even though it's not in Step 1's test code above: two regression tests proving the per-route middleware scoping in Step 3 actually works -- one asserting a >64KB body to an existing route like `/api/chat` is NOT rejected by check-in's 64KB limit, and one asserting hammering an existing route like `/api/log` past 30 requests is NOT blocked by check-in's rate limiter. An earlier draft of this task used router-level `.use()` instead of per-route middleware and broke body parsing/rate limiting for every other `/api/*` route in the app; these tests are what catches that class of regression if it's ever reintroduced.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/checkin/routes.js server/index.js server/tests/checkin.routes.test.js
@@ -1935,7 +1935,7 @@ This task makes the server actually initialize check-in's Postgres schema and lo
 
 **Important, learned the hard way in this session's own execution:** do NOT `process.exit(1)` on a bad instrument file. Sim is a live production app serving real ERAU students, and chat/sessions/the SPA don't depend on instrument files at all -- crashing the whole process over a check-in-only content error (the kind of typo likely during the future migration of the other 9 instrument files, hand-authored content with no CI gate blocking a bad deploy) takes down the entire app over a fault confined to one new, additive feature. Express 4 already catches synchronous throws inside route handlers and returns a 500 for just that request, so log loudly and keep booting -- check-in's own two routes degrade to per-request 500s until the file is fixed and redeployed, exactly like the app already handles Postgres being unavailable (503, not a crash) for the DB-backed routes.
 
-- [ ] **Step 1: Add the instrument loader require**
+- [x] **Step 1: Add the instrument loader require**
 
 In `server/index.js`, add near the other checkin require:
 
@@ -1944,7 +1944,7 @@ const instrumentLoader = require('./checkin/instrumentLoader');
 const checkinDb = require('./checkin/db');
 ```
 
-- [ ] **Step 2: Replace the boot block to initialize both schemas and load instruments**
+- [x] **Step 2: Replace the boot block to initialize both schemas and load instruments**
 
 Find this existing block near the bottom of `server/index.js`:
 
@@ -1992,12 +1992,12 @@ if (require.main === module) {
 
 The trailing `.catch()` on `Promise.all(...).then(...)` is defensive symmetry: `initSchema()` and `checkinDb.initCheckinSchema()` both already swallow their own errors internally and always resolve (never reject), so this can't fire today -- but if that ever changes, an unhandled rejection here would otherwise silently hang the server with no log line and no listener ever starting. A genuinely unexpected startup failure at this layer (as opposed to a known, already-handled "no DATABASE_URL" case) is a different risk category from a bad instrument file, and `process.exit(1)` here is the right call for it.
 
-- [ ] **Step 3: Run the full test suite**
+- [x] **Step 3: Run the full test suite**
 
 Run: `cd server && npm test`
 Expected: all suites still pass. (Tests import `index.js` without `require.main === module` being true under Jest, so this boot block does not run during tests -- consistent with how `initSchema()` already worked before this change.)
 
-- [ ] **Step 4: Manually verify the degraded (non-fatal) behavior**
+- [x] **Step 4: Manually verify the degraded (non-fatal) behavior**
 
 Run: `cd server && CHECKIN_INSTRUMENT_DIR=/nonexistent node index.js &` (background it).
 Expected: the process logs `[CheckIn] Instrument validation failed at boot -- check-in endpoints will error until this is fixed and redeployed:` followed by an ENOENT message, THEN still logs the normal `OBLD 500 Simulation Suite running on port 3000` line and keeps running (confirm with `ps` or similar that it's still alive, not exited).
@@ -2006,7 +2006,7 @@ While it's running, confirm the failure is genuinely scoped: `curl -s -o /dev/nu
 
 Also re-verify the successful-boot case still works: `cd server && CHECKIN_HMAC_SECRET=test CHECKIN_AES_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))") node index.js &` (default, valid instruments dir) should log `[CheckIn] Instruments loaded and validated` then the normal startup line. Stop it afterward.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/index.js
@@ -2022,7 +2022,7 @@ git commit -m "feat: load and validate check-in instruments at boot, degrade che
 - Modify: `README.md`
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: Document the new env vars**
+- [x] **Step 1: Document the new env vars**
 
 Add to `.env.example`, after the existing `PORT` line:
 
@@ -2042,7 +2042,7 @@ CHECKIN_AES_KEY=change-me-to-a-base64-32-byte-key
 CHECKIN_INSTRUMENT_DIR=
 ```
 
-- [ ] **Step 2: Add a Check-In Module section to README.md**
+- [x] **Step 2: Add a Check-In Module section to README.md**
 
 Add this new section to `README.md`, after the existing "## Persistence (PostgreSQL)" section:
 
@@ -2076,7 +2076,7 @@ the "then and now" comparison panel, `key`/`none` identity modes, and the
 real instrument migration.
 ```
 
-- [ ] **Step 3: Update CLAUDE.md's Repository Structure section**
+- [x] **Step 3: Update CLAUDE.md's Repository Structure section**
 
 In `CLAUDE.md`, find the `server/` line in the Repository Structure code block and add a line beneath it:
 
@@ -2086,7 +2086,7 @@ server/             # Express API proxy + persistence
   checkin/          # Baseline/Debrief check-in module (see README's Check-In Module section)
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .env.example README.md CLAUDE.md
@@ -2103,7 +2103,7 @@ git commit -m "docs: document the check-in module env vars and endpoints"
 
 This codebase has no client-side test runner (only the server has Jest configured) and no existing multi-file component split to follow -- `App.jsx` is one 2188-line file. This plan does not introduce a new testing framework unilaterally; verification for the client tasks is manual (build + browser), consistent with how this session verified Sim's own redeploy. `CheckIn.jsx` is one file, matching `App.jsx`'s own single-large-component convention.
 
-- [ ] **Step 1: Export the color palette from App.jsx**
+- [x] **Step 1: Export the color palette from App.jsx**
 
 In `client/src/App.jsx`, find:
 
@@ -2117,7 +2117,7 @@ Change it to:
 export const C = {
 ```
 
-- [ ] **Step 2: Create CheckIn.jsx with the data-fetching shell and Intro screen**
+- [x] **Step 2: Create CheckIn.jsx with the data-fetching shell and Intro screen**
 
 Create `client/src/CheckIn.jsx`:
 
@@ -2260,7 +2260,7 @@ export default function CheckIn({ moduleNum, phase }) {
 }
 ```
 
-- [ ] **Step 3: Wire the URL entry point and view into App.jsx**
+- [x] **Step 3: Wire the URL entry point and view into App.jsx**
 
 In `client/src/App.jsx`, add the import near the top (after the existing `import { useState, ...} from "react";` line):
 
@@ -2316,7 +2316,7 @@ and add immediately before it:
 )}
 ```
 
-- [ ] **Step 4: Manual verification**
+- [x] **Step 4: Manual verification**
 
 Run: `cd client && npm run dev` (in one terminal) and `cd server && node index.js` (in another, with `CHECKIN_HMAC_SECRET`/`CHECKIN_AES_KEY` set in `server/.env` per `.env.example`).
 
@@ -2329,7 +2329,7 @@ Expected: same screen, phase label reads "debrief".
 Open `http://localhost:5173/?week=99&mode=baseline` (a module with no instrument).
 Expected: the error screen renders ("No check-in found for this module.").
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add client/src/App.jsx client/src/CheckIn.jsx
@@ -2343,7 +2343,7 @@ git commit -m "feat: add check-in Intro screen and ?week=/mode= URL entry point"
 **Files:**
 - Modify: `client/src/CheckIn.jsx`
 
-- [ ] **Step 1: Add a reusable Likert item and subscale screen component**
+- [x] **Step 1: Add a reusable Likert item and subscale screen component**
 
 In `client/src/CheckIn.jsx`, add these components above `export default function CheckIn`:
 
@@ -2464,7 +2464,7 @@ Add `useRef` to the existing React import at the top of the file:
 import { useState, useEffect, useCallback, useRef } from "react";
 ```
 
-- [ ] **Step 2: Add the responsive radio-row CSS**
+- [x] **Step 2: Add the responsive radio-row CSS**
 
 At the very top of `CheckIn.jsx`'s JSX output (inside the outer wrapping element -- see Step 3), the plan needs one small piece of CSS that inline styles cannot express: a media query so options stack vertically under 480px, per spec section 10's 360px-width requirement. Add this constant near the top of the file, below the imports:
 
@@ -2478,7 +2478,7 @@ const RESPONSIVE_STYLE = `
 `;
 ```
 
-- [ ] **Step 3: Wire subscale navigation into the CheckIn component**
+- [x] **Step 3: Wire subscale navigation into the CheckIn component**
 
 Replace the body of `export default function CheckIn({ moduleNum, phase }) {` (from Task 12) with the version below, which adds `answers` state and subscale index navigation:
 
@@ -2560,7 +2560,7 @@ export default function CheckIn({ moduleNum, phase }) {
 
 (The `post-experience` and `review` placeholders render `<LoadingScreen />` only until Tasks 14-15 replace them -- this is intentional scaffolding within one in-progress task's steps, not a shipped placeholder; Step 4 verifies the subscale flow specifically, and later tasks replace both branches before this feature is considered done.)
 
-- [ ] **Step 4: Manual verification**
+- [x] **Step 4: Manual verification**
 
 With both dev servers running (per Task 12 Step 4), open `http://localhost:5173/?week=4&mode=baseline`.
 
@@ -2572,7 +2572,7 @@ With both dev servers running (per Task 12 Step 4), open `http://localhost:5173/
 6. Resize the browser to 360px wide (or use dev tools device emulation). Expected: the 7 radio options stack vertically with labels fully visible, no horizontal scrollbar.
 7. Advance through all 4 subscales. Expected: after Section 4, the screen goes blank (loading spinner) -- this is the Task 14/15 placeholder; that is expected at this point in the plan.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add client/src/CheckIn.jsx
@@ -2586,7 +2586,7 @@ git commit -m "feat: add check-in subscale screens with keyboard-accessible Like
 **Files:**
 - Modify: `client/src/CheckIn.jsx`
 
-- [ ] **Step 1: Add the PostExperienceScreen and OpenEndedScreen components**
+- [x] **Step 1: Add the PostExperienceScreen and OpenEndedScreen components**
 
 Add these above `export default function CheckIn`, near the other screen components:
 
@@ -2708,7 +2708,7 @@ function OpenEndedScreen({ prompts, answers, onAnswer, onNext, onBack }) {
 }
 ```
 
-- [ ] **Step 2: Wire the two screens into the CheckIn component**
+- [x] **Step 2: Wire the two screens into the CheckIn component**
 
 In `client/src/CheckIn.jsx`, add `pxAnswers` and `openAnswers` state alongside the existing `answers` state:
 
@@ -2744,7 +2744,7 @@ Replace the `{status === "post-experience" && <LoadingScreen />}` and `{status =
 
 Note: going "Back" from post-experience returns to `"subscale"`, which will show the last subscale (index is unchanged from when the learner left it) -- this matches spec section 5's "the Back button on each screen works."
 
-- [ ] **Step 3: Manual verification**
+- [x] **Step 3: Manual verification**
 
 Open `http://localhost:5173/?week=4&mode=debrief`, enter an email, click Start, and answer all 4 subscales.
 
@@ -2754,7 +2754,7 @@ Expected: the open-ended screen appears with 3 textareas, each showing a live "X
 
 Click Back from the open-ended screen. Expected: returns to Post-Experience with prior answers intact.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add client/src/CheckIn.jsx
@@ -2768,7 +2768,7 @@ git commit -m "feat: add check-in debrief post-experience and open-ended screens
 **Files:**
 - Modify: `client/src/CheckIn.jsx`
 
-- [ ] **Step 1: Add the ReviewScreen and ConfirmationScreen components**
+- [x] **Step 1: Add the ReviewScreen and ConfirmationScreen components**
 
 Add above `export default function CheckIn`:
 
@@ -2869,7 +2869,7 @@ function ConfirmationScreen({ completionText, moduleNum, completionCode }) {
 
 A no-op `copied ? ... : ...` boolean (the catch branch just re-set `false`, which it already was) previously left the learner with zero feedback on a failed clipboard write -- plausible in a Canvas iframe embed, non-HTTPS context, or denied permission. The three-state version above, confirmed live in a browser during code review (a forced clipboard rejection correctly showed "Copy failed" plus the fallback instruction), fixes that.
 
-- [ ] **Step 2: Wire straightlining confirmation, submit, and confirmation state**
+- [x] **Step 2: Wire straightlining confirmation, submit, and confirmation state**
 
 In `client/src/CheckIn.jsx`, add state for submission:
 
@@ -2995,7 +2995,7 @@ Replace `{status === "review" && <LoadingScreen />}` with:
 
 `instrument.completion` is already phase-specific by this point: the server's `GET /api/instrument/:course/:module/:phase` (Task 9) returns `completion: instrument.completion[phase]` as a plain string, not the `{baseline, debrief}` object from the raw instrument file. Do not index it again on the client.
 
-- [ ] **Step 3: Manual verification (full baseline flow)**
+- [x] **Step 3: Manual verification (full baseline flow)**
 
 With both dev servers running:
 
@@ -3006,16 +3006,16 @@ With both dev servers running:
 5. Click Submit. Expected: brief "Submitting..." state, then the Confirmation screen with the baseline completion text (module number substituted in), a monospace completion code matching `AL4-B-XXXXXXXX`, and a working Copy button.
 6. Check the server terminal log: expected either `[DB] Schema initialized` / `[CheckIn DB] Schema initialized` (if `DATABASE_URL` is set locally) or, if not, a 503 on submit -- in that case, set a local Postgres or the shared dev instance's `DATABASE_URL` to complete this check end-to-end.
 
-- [ ] **Step 4: Manual verification (straightlining prompt)**
+- [x] **Step 4: Manual verification (straightlining prompt)**
 
 Repeat the flow, this time answering every single item (all 20 core items) with the same value (e.g., always "4"). On the Review screen, click Submit.
 Expected: a browser confirm dialog reading "You answered every item the same way. Submit anyway?" appears before the request is sent. Clicking Cancel keeps you on the Review screen; clicking OK proceeds to submission.
 
-- [ ] **Step 5: Manual verification (full debrief flow)**
+- [x] **Step 5: Manual verification (full debrief flow)**
 
 Repeat with `?week=4&mode=debrief`, completing the post-experience and open-ended screens as well. Expected: the Review screen shows 6 rows (4 subscales + Post-Experience Reflection + Reflection Questions), and after submit, the confirmation screen shows the debrief completion text with a code matching `AL4-D-XXXXXXXX`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add client/src/CheckIn.jsx
@@ -3032,7 +3032,7 @@ git commit -m "feat: add check-in review, submit, and confirmation screens"
 
 Satisfies spec acceptance criterion 8 ("The privacy page exists and the intro screen links it") and section 9's requirement for a plain-language privacy statement. `CheckIn.jsx`'s Intro screen (Task 12) already links to `/privacy` -- this task makes that link resolve to something real instead of falling through to the SPA.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `server/tests/checkin.privacy.test.js`:
 
@@ -3057,12 +3057,12 @@ describe('GET /privacy', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cd server && npx jest tests/checkin.privacy.test.js`
 Expected: FAIL -- the SPA fallback (or a 404) serves at `/privacy` today, and its content will not match the privacy-specific assertions.
 
-- [ ] **Step 3: Add the /privacy route**
+- [x] **Step 3: Add the /privacy route**
 
 In `server/index.js`, add this route before the SPA fallback (`app.get('*', ...)`) -- route order matters, since Express matches in registration order and the fallback would otherwise swallow this path:
 
@@ -3118,17 +3118,17 @@ app.get('/privacy', (req, res) => {
 
 Two things about the text above are corrections, not the original draft: the intro paragraph names LDRC explicitly (the test's own `/LDRC/` assertion required it, and the first draft of this page never mentioned it by name -- a bug in the task itself, caught when the test predictably failed for the right reason), and "How long" no longer promises automatic deletion at course end. That promise isn't backed by any code in this plan -- the retention purge job is explicitly deferred (see the deviations list at the top of this document) -- so the wording above only describes what's actually true today: data is retained, and deletion happens if a human acts on a request, not automatically.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `cd server && npx jest tests/checkin.privacy.test.js`
 Expected: `Tests: 1 passed, 1 total`
 
-- [ ] **Step 5: Run the full suite to check for regressions**
+- [x] **Step 5: Run the full suite to check for regressions**
 
 Run: `cd server && npm test`
 Expected: all suites pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/index.js server/tests/checkin.privacy.test.js
@@ -3141,17 +3141,17 @@ git commit -m "feat: add plain-language /privacy statement page"
 
 **Files:** none (verification only)
 
-- [ ] **Step 1: Run the full server test suite one more time**
+- [x] **Step 1: Run the full server test suite one more time**
 
 Run: `cd server && npm test`
 Expected: all suites pass (32 original + all new check-in tests).
 
-- [ ] **Step 2: Confirm the client still builds for production**
+- [x] **Step 2: Confirm the client still builds for production**
 
 Run: `cd client && npm run build`
 Expected: build succeeds with no errors (Vite will report bundle size; a warning about chunk size is fine, an error is not).
 
-- [ ] **Step 3: Build and run the full Docker image locally (mirrors how this session verified the Sim restart)**
+- [x] **Step 3: Build and run the full Docker image locally (mirrors how this session verified the Sim restart)**
 
 From the repo root:
 
@@ -3164,7 +3164,7 @@ docker run -d --name sim-checkin-test -p 18090:3000 \
   sim-checkin-test
 ```
 
-- [ ] **Step 4: Smoke-test the containerized app**
+- [x] **Step 4: Smoke-test the containerized app**
 
 ```bash
 curl -s -o /dev/null -w "GET / -> %{http_code}\n" http://127.0.0.1:18090/
@@ -3175,14 +3175,14 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST http://127.0.0.1:18090/api/responses 
 
 Expected: `GET /` returns 200; `GET /privacy` returns 200; `GET /api/instrument/...` returns 200 with the AL instrument JSON; `POST /api/responses` with an empty body returns 400 (validation error, not a crash) -- and, since no `DATABASE_URL` was set for this container, it should actually return 503 before validation even runs, confirming `requireDb` still gates the route correctly.
 
-- [ ] **Step 5: Clean up**
+- [x] **Step 5: Clean up**
 
 ```bash
 docker rm -f sim-checkin-test
 docker rmi sim-checkin-test
 ```
 
-- [ ] **Step 6: Push the branch**
+- [x] **Step 6: Push the branch**
 
 ```bash
 git push -u origin feature/checkin-module
