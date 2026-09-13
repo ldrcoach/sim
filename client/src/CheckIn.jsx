@@ -103,7 +103,7 @@ function IntroScreen({ instrument, moduleNum, phase, email, setEmail, onStart })
   );
 }
 
-function LikertItem({ item, value, onChange, scaleLabels }) {
+function LikertItem({ item, value, onChange, scaleLabels, firstInputRef }) {
   return (
     <fieldset style={{ border: "none", borderBottom: `1px solid ${C.lightGray}`, padding: "16px 0", margin: 0 }}>
       <legend style={{ fontSize: 16, marginBottom: 12, padding: 0 }}>{item.text}</legend>
@@ -124,6 +124,7 @@ function LikertItem({ item, value, onChange, scaleLabels }) {
             >
               <input
                 id={inputId}
+                ref={i === 0 ? firstInputRef : undefined}
                 type="radio"
                 name={item.id}
                 value={optionValue}
@@ -144,11 +145,18 @@ function SubscaleScreen({ subscale, scaleLabels, answers, onAnswer, onNext, onBa
   const allAnswered = subscale.items.every((item) => answers[item.id] != null);
   const [triedNext, setTriedNext] = useState(false);
   const firstUnansweredRef = useRef(null);
+  const firstUnansweredItem = subscale.items.find((item) => answers[item.id] == null);
+  const firstUnansweredId = firstUnansweredItem ? firstUnansweredItem.id : null;
+
+  useEffect(() => {
+    if (triedNext && firstUnansweredId && firstUnansweredRef.current) {
+      firstUnansweredRef.current.focus();
+    }
+  }, [triedNext, firstUnansweredId]);
 
   const handleNext = () => {
     if (!allAnswered) {
       setTriedNext(true);
-      if (firstUnansweredRef.current) firstUnansweredRef.current.focus();
       return;
     }
     onNext();
@@ -162,15 +170,15 @@ function SubscaleScreen({ subscale, scaleLabels, answers, onAnswer, onNext, onBa
       <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 4 }}>{subscale.name}</h2>
       <p style={{ color: C.textSec, marginBottom: 16 }}>{subscale.help}</p>
 
-      {subscale.items.map((item, i) => (
-        <div key={item.id} ref={triedNext && answers[item.id] == null && !firstUnansweredRef.current ? firstUnansweredRef : null}>
-          <LikertItem
-            item={item}
-            value={answers[item.id]}
-            onChange={onAnswer}
-            scaleLabels={scaleLabels}
-          />
-        </div>
+      {subscale.items.map((item) => (
+        <LikertItem
+          key={item.id}
+          item={item}
+          value={answers[item.id]}
+          onChange={onAnswer}
+          scaleLabels={scaleLabels}
+          firstInputRef={item.id === firstUnansweredId ? firstUnansweredRef : undefined}
+        />
       ))}
 
       {triedNext && !allAnswered && (
@@ -246,6 +254,7 @@ export default function CheckIn({ moduleNum, phase }) {
       )}
       {status === "subscale" && (
         <SubscaleScreen
+          key={instrument.subscales[subscaleIndex].id}
           subscale={instrument.subscales[subscaleIndex]}
           scaleLabels={instrument.scale.labels}
           answers={answers}
