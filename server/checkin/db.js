@@ -20,7 +20,7 @@ async function initCheckinSchema() {
       );
 
       CREATE TABLE IF NOT EXISTS checkin_participants (
-        participant_id VARCHAR(64) PRIMARY KEY,
+        participant_id VARCHAR(80) PRIMARY KEY,
         email_encrypted TEXT,
         identity_mode VARCHAR(16) NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
@@ -31,7 +31,7 @@ async function initCheckinSchema() {
         course VARCHAR(32) NOT NULL,
         module INTEGER NOT NULL,
         phase VARCHAR(16) NOT NULL CHECK (phase IN ('baseline', 'debrief')),
-        participant_id VARCHAR(64) NOT NULL REFERENCES checkin_participants(participant_id),
+        participant_id VARCHAR(80) NOT NULL REFERENCES checkin_participants(participant_id),
         instrument_version VARCHAR(32) NOT NULL,
         started_at TIMESTAMPTZ NOT NULL,
         submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -46,14 +46,16 @@ async function initCheckinSchema() {
         response_id INTEGER NOT NULL REFERENCES checkin_responses(id) ON DELETE CASCADE,
         item_id VARCHAR(32) NOT NULL,
         raw_value INTEGER NOT NULL,
-        scored_value INTEGER NOT NULL
+        scored_value INTEGER NOT NULL,
+        UNIQUE (response_id, item_id)
       );
 
       CREATE TABLE IF NOT EXISTS checkin_subscale_scores (
         response_id INTEGER NOT NULL REFERENCES checkin_responses(id) ON DELETE CASCADE,
         subscale_id VARCHAR(32) NOT NULL,
         mean NUMERIC(4,2) NOT NULL,
-        n_items INTEGER NOT NULL
+        n_items INTEGER NOT NULL,
+        UNIQUE (response_id, subscale_id)
       );
 
       CREATE INDEX IF NOT EXISTS idx_checkin_responses_participant
@@ -86,7 +88,7 @@ async function findLatestResponseId(participantId, course, moduleNum, phase) {
   const result = await p.query(
     `SELECT id FROM checkin_responses
      WHERE participant_id = $1 AND course = $2 AND module = $3 AND phase = $4
-     ORDER BY submitted_at DESC LIMIT 1`,
+     ORDER BY submitted_at DESC, id DESC LIMIT 1`,
     [participantId, course, moduleNum, phase]
   );
   return result.rows.length ? result.rows[0].id : null;
