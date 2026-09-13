@@ -32,6 +32,11 @@ describe('toCsv', () => {
     expect(csv).toContain('"line one\nline two"');
   });
 
+  test('quotes a field containing a bare carriage return', () => {
+    const csv = toCsv([{ text: 'line one\rline two' }]);
+    expect(csv).toContain('"line one\rline two"');
+  });
+
   test('renders null and undefined as empty fields', () => {
     const csv = toCsv([{ a: null, b: undefined }]);
     expect(csv.split('\n')[1]).toBe(',');

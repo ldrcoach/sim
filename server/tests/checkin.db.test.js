@@ -199,4 +199,17 @@ describe('getExportPairedRows', () => {
     expect(result).toEqual(rows);
     expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('JOIN checkin_subscale_scores'), ['OBLD500']);
   });
+
+  test('restricts each participant/module/phase to its single most recent response', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    await checkinDb.getExportPairedRows('OBLD500');
+    const sql = mockQuery.mock.calls[0][0];
+    // Correlated subquery must tie the "most recent" lookup back to the outer
+    // row on participant/module/phase (not just course), using the same
+    // submitted_at/id tie-break as findLatestResponseId.
+    expect(sql).toContain('cr2.participant_id = cr.participant_id');
+    expect(sql).toContain('cr2.module = cr.module');
+    expect(sql).toContain('cr2.phase = cr.phase');
+    expect(sql).toContain('ORDER BY submitted_at DESC, id DESC LIMIT 1');
+  });
 });

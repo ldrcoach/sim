@@ -1,7 +1,7 @@
 function escapeField(value) {
   if (value == null) return '';
   const str = value instanceof Date ? value.toISOString() : String(value);
-  if (/[",\n]/.test(str)) {
+  if (/[",\r\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }
   return str;
