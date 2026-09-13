@@ -1728,8 +1728,6 @@ const checkinDb = require('./db');
 
 const router = express.Router();
 
-router.use(express.json({ limit: '64kb' }));
-
 const checkinLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
@@ -1737,7 +1735,6 @@ const checkinLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests. Please wait before trying again.' },
 });
-router.use(checkinLimiter);
 
 function requireDb(req, res, next) {
   if (!checkinDb.isAvailable()) {
@@ -1749,7 +1746,19 @@ function requireDb(req, res, next) {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_PHASES = ['baseline', 'debrief'];
 
-router.get('/instrument/:course/:module/:phase', (req, res) => {
+// IMPORTANT: checkinLimiter (and, on the POST route, the 64KB json parser)
+// are attached as PER-ROUTE middleware arguments below, not via a bare
+// router.use(fn). This router is mounted at the shared /api prefix in
+// index.js, and router.use(fn) with no path runs for every request that
+// enters the router -- including /api/chat, /api/sessions, etc. -- even
+// when no route inside this router ends up matching. Per-route middleware
+// only fires when that specific route's path matches, which is what keeps
+// these two checks scoped to just the two check-in endpoints. (This was
+// caught by code review after an earlier draft used router.use(fn) and
+// broke body parsing/rate limiting for every other /api/* route in the
+// app -- verified by reproduction. Don't reintroduce that pattern here.)
+
+router.get('/instrument/:course/:module/:phase', checkinLimiter, (req, res) => {
   const { course, phase } = req.params;
   const moduleNum = Number(req.params.module);
 
@@ -1767,7 +1776,7 @@ router.get('/instrument/:course/:module/:phase', (req, res) => {
   res.json(view);
 });
 
-router.post('/responses', requireDb, async (req, res) => {
+router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requireDb, async (req, res) => {
   try {
     const { course, phase, identity: ident, started_at, answers, extras } = req.body;
     const moduleNum = Number(req.body.module);
@@ -1890,21 +1899,23 @@ const { getPool, isAvailable, initSchema } = require('./db');
 const checkinRoutes = require('./checkin/routes');
 ```
 
-Then, immediately after the `app.set('trust proxy', 1);` line and before `app.use(express.json({ limit: '1mb' }));`, mount the check-in router. It must come first so its own `express.json({ limit: '64kb' })` (registered inside `checkin/routes.js`) parses check-in request bodies before the wider 1mb parser gets a chance to:
+Then, immediately after the `app.set('trust proxy', 1);` line and before `app.use(express.json({ limit: '1mb' }));`, mount the check-in router:
 
 ```javascript
 app.use('/api', checkinRoutes);
 ```
 
+The exact position relative to the app's own `express.json({limit:'1mb'})` doesn't affect correctness now that the check-in router's own body limit and rate limiter are per-route middleware (see the note above `router.get('/instrument/...')` in Step 3) rather than router-level -- there's no cross-router body-parsing interaction to order around. Placing it here, right after `trust proxy`, is just about keeping new routes grouped together near the top of the file for readability.
+
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `cd server && npx jest tests/checkin.routes.test.js`
-Expected: `Tests: 14 passed, 14 total`
+Expected: `Tests: 16 passed, 16 total` (count the `test(...)` blocks in Step 1's code above if this ever drifts -- treat the actual test file as authoritative over any number stated here).
 
 - [ ] **Step 6: Run the full suite to check for regressions**
 
 Run: `cd server && npm test`
-Expected: all suites pass, including the original 32 tests (the existing `/api/sessions` etc. routes are untouched; check-in routes are additive under the same `/api` prefix but distinct paths).
+Expected: all suites pass, including the original 32 tests (the existing `/api/sessions` etc. routes are untouched; check-in routes are additive under the same `/api` prefix but distinct paths). Also worth adding at this point, even though it's not in Step 1's test code above: two regression tests proving the per-route middleware scoping in Step 3 actually works -- one asserting a >64KB body to an existing route like `/api/chat` is NOT rejected by check-in's 64KB limit, and one asserting hammering an existing route like `/api/log` past 30 requests is NOT blocked by check-in's rate limiter. An earlier draft of this task used router-level `.use()` instead of per-route middleware and broke body parsing/rate limiting for every other `/api/*` route in the app; these tests are what catches that class of regression if it's ever reintroduced.
 
 - [ ] **Step 7: Commit**
 
