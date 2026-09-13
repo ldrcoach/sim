@@ -60,7 +60,7 @@ function IntroScreen({ instrument, moduleNum, phase, email, setEmail, onStart })
           border: `1px solid ${touched && !emailValid ? C.danger : C.lightGray}`,
           marginBottom: 6,
         }}
-        aria-describedby="email-error"
+        aria-describedby={touched && !emailValid ? "email-error" : undefined}
       />
       {touched && !emailValid && (
         <p id="email-error" style={{ color: C.danger, fontSize: 13, marginBottom: 12 }}>
@@ -110,7 +110,7 @@ export default function CheckIn({ moduleNum, phase }) {
         throw new Error(res.status === 404 ? "No check-in found for this module." : `Error ${res.status}`);
       }
       const data = await res.json();
-      setInstrument({ ...data, intro: data.intro });
+      setInstrument(data);
       setStatus("intro");
     } catch (err) {
       setErrorMessage(err.message);

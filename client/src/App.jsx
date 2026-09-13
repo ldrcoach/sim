@@ -15,6 +15,16 @@ export const C = {
 
 const WEEK_ORDER = ["SR", "LF", "CT", "AL", "EM", "LC", "MN", "CS", "SL"];
 
+function parseCheckinParams() {
+  const params = new URLSearchParams(window.location.search);
+  const week = params.get("week");
+  const mode = params.get("mode");
+  if (week && (mode === "baseline" || mode === "debrief")) {
+    return { moduleNum: Number(week), phase: mode };
+  }
+  return null;
+}
+
 // ============================================================
 // SIMULATION DATA: WEEKS (rubric dimensions per week)
 // ============================================================
@@ -2072,21 +2082,8 @@ function ObsReflect({ obs, weekMeta, onHome, onRewatch }) {
 // MAIN APP
 // ============================================================
 export default function App() {
-  const [view, setView] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    const week = params.get("week");
-    const mode = params.get("mode");
-    return week && (mode === "baseline" || mode === "debrief") ? "checkin" : "landing";
-  }); // landing | sim-* | obs-* | checkin
-  const [checkinParams] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    const week = params.get("week");
-    const mode = params.get("mode");
-    if (week && (mode === "baseline" || mode === "debrief")) {
-      return { moduleNum: Number(week), phase: mode };
-    }
-    return null;
-  });
+  const [view, setView] = useState(() => (parseCheckinParams() ? "checkin" : "landing")); // landing | sim-* | obs-* | checkin
+  const [checkinParams] = useState(() => parseCheckinParams());
   const [mode, setMode] = useState("simulate");
   const [simId, setSimId] = useState(null);
   const [obsId, setObsId] = useState(null);
