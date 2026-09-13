@@ -316,6 +316,90 @@ function OpenEndedScreen({ prompts, answers, onAnswer, onNext, onBack }) {
   );
 }
 
+function ReviewScreen({ instrument, phase, answeredCounts, onSubmit, onBack, submitting, submitError }) {
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px" }}>
+      <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 16 }}>Review</h2>
+
+      <ul style={{ listStyle: "none", padding: 0, marginBottom: 20 }}>
+        {answeredCounts.map((section) => (
+          <li
+            key={section.label}
+            style={{
+              display: "flex", justifyContent: "space-between", padding: "10px 0",
+              borderBottom: `1px solid ${C.lightGray}`,
+            }}
+          >
+            <span>{section.label}</span>
+            <span style={{ color: section.answered === section.total ? C.success : C.danger }}>
+              answered {section.answered} of {section.total}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {submitError && (
+        <p role="alert" style={{ color: C.danger, marginBottom: 12 }}>{submitError}</p>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <button onClick={onBack} disabled={submitting} style={{ padding: "10px 20px", borderRadius: 6, border: `1px solid ${C.lightGray}`, background: C.white, minHeight: 44 }}>
+          Back
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={submitting}
+          style={{
+            padding: "10px 24px", borderRadius: 6, border: "none", minHeight: 44,
+            background: submitting ? C.lightGray : C.navy, color: submitting ? C.midGray : C.white,
+            cursor: submitting ? "default" : "pointer",
+          }}
+        >
+          {submitting ? "Submitting..." : "Submit"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmationScreen({ completionText, moduleNum, completionCode }) {
+  const [copied, setCopied] = useState(false);
+  const text = completionText.replace("{module}", moduleNum);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(completionCode);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px", textAlign: "center" }}>
+      <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 16 }}>Complete</h2>
+      <p style={{ marginBottom: 24, lineHeight: 1.6 }}>{text}</p>
+
+      <div style={{
+        fontFamily: "monospace", fontSize: 24, letterSpacing: 2, background: C.lightGray,
+        borderRadius: 8, padding: "16px 20px", marginBottom: 12, wordBreak: "break-all",
+      }}>
+        {completionCode}
+      </div>
+
+      <button
+        onClick={handleCopy}
+        style={{
+          padding: "10px 24px", borderRadius: 6, border: "none", minHeight: 44,
+          background: C.navy, color: C.white, cursor: "pointer",
+        }}
+      >
+        {copied ? "Copied!" : "Copy code"}
+      </button>
+    </div>
+  );
+}
+
 export default function CheckIn({ moduleNum, phase }) {
   const course = "OBLD500";
   const [status, setStatus] = useState("loading"); // loading | error | intro | subscale
@@ -326,6 +410,11 @@ export default function CheckIn({ moduleNum, phase }) {
   const [subscaleIndex, setSubscaleIndex] = useState(0);
   const [pxAnswers, setPxAnswers] = useState({});
   const [openAnswers, setOpenAnswers] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [straightlineConfirmed, setStraightlineConfirmed] = useState(false);
+  const [result, setResult] = useState(null);
+  const [startedAt, setStartedAt] = useState(null);
 
   const loadInstrument = useCallback(async () => {
     setStatus("loading");
@@ -349,6 +438,50 @@ export default function CheckIn({ moduleNum, phase }) {
     setAnswers((prev) => ({ ...prev, [itemId]: value }));
   };
 
+  const isStraightlineLocal = () => {
+    const allItems = instrument.subscales.flatMap((s) => s.items);
+    const values = allItems.map((item) => answers[item.id]);
+    return values.every((v) => v === values[0]);
+  };
+
+  const doSubmit = async () => {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const body = {
+        course,
+        module: moduleNum,
+        phase,
+        identity: { email: email.trim() },
+        started_at: startedAt,
+        answers,
+        ...(phase === "debrief" ? { extras: { post_experience: pxAnswers, open_ended: openAnswers } } : {}),
+      };
+      const res = await fetch("/api/responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+      setResult(data);
+      setStatus("confirmation");
+    } catch (err) {
+      setSubmitError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitClick = () => {
+    if (!straightlineConfirmed && isStraightlineLocal()) {
+      const proceed = window.confirm("You answered every item the same way. Submit anyway?");
+      if (!proceed) return;
+      setStraightlineConfirmed(true);
+    }
+    doSubmit();
+  };
+
   if (status === "loading") return <LoadingScreen />;
   if (status === "error") return <ErrorScreen message={errorMessage} />;
 
@@ -362,7 +495,7 @@ export default function CheckIn({ moduleNum, phase }) {
           phase={phase}
           email={email}
           setEmail={setEmail}
-          onStart={() => setStatus("subscale")}
+          onStart={() => { setStartedAt(new Date().toISOString()); setStatus("subscale"); }}
         />
       )}
       {status === "subscale" && (
@@ -405,7 +538,42 @@ export default function CheckIn({ moduleNum, phase }) {
           onNext={() => setStatus("review")}
         />
       )}
-      {status === "review" && <LoadingScreen />}
+      {status === "review" && (
+        <ReviewScreen
+          instrument={instrument}
+          phase={phase}
+          answeredCounts={[
+            ...instrument.subscales.map((s) => ({
+              label: s.name,
+              answered: s.items.filter((item) => answers[item.id] != null).length,
+              total: s.items.length,
+            })),
+            ...(phase === "debrief" ? [
+              {
+                label: "Post-Experience Reflection",
+                answered: instrument.debrief_extras.post_experience.items.filter((item) => pxAnswers[item.id] != null).length,
+                total: instrument.debrief_extras.post_experience.items.length,
+              },
+              {
+                label: "Reflection Questions",
+                answered: instrument.debrief_extras.open_ended.filter((p) => (openAnswers[p.id] || "").trim().length >= 40).length,
+                total: instrument.debrief_extras.open_ended.length,
+              },
+            ] : []),
+          ]}
+          onSubmit={handleSubmitClick}
+          onBack={() => setStatus(phase === "debrief" ? "open-ended" : "subscale")}
+          submitting={submitting}
+          submitError={submitError}
+        />
+      )}
+      {status === "confirmation" && result && (
+        <ConfirmationScreen
+          completionText={instrument.completion}
+          moduleNum={moduleNum}
+          completionCode={result.completion_code}
+        />
+      )}
     </>
   );
 }
