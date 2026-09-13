@@ -39,6 +39,13 @@ describe('requireAdminToken', () => {
     expect(res.status).toBe(401);
   });
 
+  test('returns 401 when a same-length but incorrect token is sent (exercises timingSafeEqual itself)', async () => {
+    process.env.CHECKIN_ADMIN_TOKEN = 'correct-token';
+    app = buildApp();
+    const res = await request(app).get('/protected').set('X-Admin-Token', 'correct-tokes');
+    expect(res.status).toBe(401);
+  });
+
   test('returns 401 when the token has the wrong length (does not throw)', async () => {
     process.env.CHECKIN_ADMIN_TOKEN = 'correct-token';
     app = buildApp();
