@@ -4,6 +4,8 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { getPool, isAvailable, initSchema } = require('./db');
 const checkinRoutes = require('./checkin/routes');
+const instrumentLoader = require('./checkin/instrumentLoader');
+const checkinDb = require('./checkin/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -181,7 +183,15 @@ app.get('*', (req, res) => {
 
 // Only start listening when run directly (not when imported by tests)
 if (require.main === module) {
-  initSchema().then(() => {
+  try {
+    instrumentLoader.load();
+    console.log('[CheckIn] Instruments loaded and validated');
+  } catch (err) {
+    console.error('[CheckIn] Instrument validation failed at boot:', err.message);
+    process.exit(1);
+  }
+
+  Promise.all([initSchema(), checkinDb.initCheckinSchema()]).then(() => {
     app.listen(PORT, () => {
       console.log(`OBLD 500 Simulation Suite running on port ${PORT}`);
     });
