@@ -119,6 +119,34 @@ Session data is optionally stored in PostgreSQL. Requires `DATABASE_URL` env var
 - `POST /api/sessions/:id/transcript` -- save conversation transcript
 - `GET /api/students/:id/history` -- retrieve student session history
 
+## Check-In Module (Baseline / Debrief)
+
+Replaces the Google Forms baseline/debrief instruments with a check-in flow
+inside Sim itself. Learners open `https://sim.ldrcoach.com/?week={N}&mode=baseline`
+or `?week={N}&mode=debrief`, answer a 20-item instrument (plus, on Debrief,
+5 post-experience items and 3 open-ended prompts), and get a completion code
+to paste into the matching Canvas assignment.
+
+**Storage:** the `checkin_*` tables in the same Postgres database used for
+session persistence (see above) -- not a separate database, and not SQLite
+(Sim's Azure Container Apps filesystem does not persist across redeploys).
+
+**Instruments:** one JSON file per module under `server/checkin/instruments/`,
+validated at server boot (a bad file logs loudly but the app keeps running --
+only check-in's own routes degrade, not the whole app). Only `AL.json`
+(Module 4, Active Listening) exists today, as a development fixture --
+migrating the real 18 Google Forms into the remaining 9 module files is a
+separate, not-yet-started task.
+
+**Endpoints:**
+- `GET /api/instrument/:course/:module/:phase` -- public instrument view (no reverse-scoring flags)
+- `POST /api/responses` -- submit a Baseline or Debrief response, returns a completion code
+
+**Not yet built** (see `docs/superpowers/plans/2026-09-13-checkin-module.md`
+for the full scope decisions): the admin API (verify/summary/export/delete),
+the "then and now" comparison panel, `key`/`none` identity modes, and the
+real instrument migration.
+
 ## API Costs
 
 Each simulation conversation costs approximately $0.02-0.05 in API calls. Observation generation costs ~$0.03 per generation. For a class of 25 students completing all scenarios once: ~$30-50 total for the semester.

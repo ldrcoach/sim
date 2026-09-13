@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import CheckIn from "./CheckIn";
 
-const C = {
+export const C = {
   navy: "#0a1628", navyLight: "#132843", navyMid: "#1a3d5c",
   gold: "#c5a55a", goldBg: "#fdf8e8",
   white: "#fff", offWhite: "#f8f9fa", lightGray: "#e8eef4",
@@ -13,6 +14,16 @@ const C = {
 };
 
 const WEEK_ORDER = ["SR", "LF", "CT", "AL", "EM", "LC", "MN", "CS", "SL"];
+
+function parseCheckinParams() {
+  const params = new URLSearchParams(window.location.search);
+  const week = params.get("week");
+  const mode = params.get("mode");
+  if (week && (mode === "baseline" || mode === "debrief")) {
+    return { moduleNum: Number(week), phase: mode };
+  }
+  return null;
+}
 
 // ============================================================
 // SIMULATION DATA: WEEKS (rubric dimensions per week)
@@ -2071,7 +2082,8 @@ function ObsReflect({ obs, weekMeta, onHome, onRewatch }) {
 // MAIN APP
 // ============================================================
 export default function App() {
-  const [view, setView] = useState("landing"); // landing | sim-* | obs-*
+  const [view, setView] = useState(() => (parseCheckinParams() ? "checkin" : "landing")); // landing | sim-* | obs-* | checkin
+  const [checkinParams] = useState(() => parseCheckinParams());
   const [mode, setMode] = useState("simulate");
   const [simId, setSimId] = useState(null);
   const [obsId, setObsId] = useState(null);
@@ -2171,6 +2183,9 @@ export default function App() {
   return (
     <div style={{ fontFamily: "'Segoe UI', -apple-system, sans-serif", background: C.offWhite, minHeight: "100vh" }}>
       <Header title={headerTitle} weekNum={headerWeek} subtitle={headerSub} />
+      {view === "checkin" && checkinParams && (
+        <CheckIn moduleNum={checkinParams.moduleNum} phase={checkinParams.phase} />
+      )}
       {view === "landing" && <LandingPage mode={mode} setMode={setMode} onSelectSim={selectSim} onSelectObs={selectObs} />}
       {view === "sim" && simPhase === "briefing" && <SimBriefing weekData={simWeek} scenario={simScenario} onStart={startSim} onBack={homeSim} />}
       {view === "sim" && simPhase === "chat" && <SimChat scenario={simScenario} messages={messages} input={input} setInput={setInput} onSend={sendSim} onEnd={endSim} isLoading={isLoading} turnCount={turnCount} />}

@@ -3,6 +3,9 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { getPool, isAvailable, initSchema } = require('./db');
+const checkinRoutes = require('./checkin/routes');
+const instrumentLoader = require('./checkin/instrumentLoader');
+const checkinDb = require('./checkin/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,6 +14,8 @@ const PORT = process.env.PORT || 3000;
 // hop; trust its X-Forwarded-For so express-rate-limit keys on the real
 // client IP instead of the proxy's.
 app.set('trust proxy', 1);
+
+app.use('/api', checkinRoutes);
 
 app.use(express.json({ limit: '1mb' }));
 
@@ -171,6 +176,56 @@ app.get('/api/students/:id/history', requireDb, async (req, res) => {
   }
 });
 
+// Privacy statement page
+app.get('/privacy', (req, res) => {
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Privacy Statement - OBLD 500 Check-In</title>
+  <style>
+    body { font-family: 'Segoe UI', -apple-system, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #0a1628; }
+    h2 { color: #0a1628; font-size: 18px; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Statement</h1>
+  <p>This page explains what happens to your responses when you complete a
+  Baseline Check or Debrief in the OBLD 500 check-in module, administered by
+  LDRC.</p>
+
+  <h2>What is collected</h2>
+  <p>Your ERAU email address, your answers to the questionnaire items, and,
+  on the Debrief, your written reflections. We do not collect your IP
+  address, browser information, or any Canvas identifiers.</p>
+
+  <h2>Why</h2>
+  <p>Your email is used only to match your Baseline and Debrief responses
+  for the same module, so your instructor can see how your self-assessed
+  skills changed over the module. It is stored encrypted and separately
+  from your answers.</p>
+
+  <h2>Who can see it</h2>
+  <p>Your course developer can see your responses in identifiable form for
+  course measurement. In aggregate (combined across the whole class,
+  without names), your responses may also be reported to ERAU. Your
+  responses are not part of your grade.</p>
+
+  <h2>How long</h2>
+  <p>Your email and responses are stored securely for as long as they are
+  useful for course measurement. You can ask your course developer to
+  delete your data at any time -- see "How to ask for deletion" below.</p>
+
+  <h2>How to ask for deletion</h2>
+  <p>Email your course developer at any time to ask that your responses be
+  deleted. Any use of your data for research beyond course measurement
+  would require separate IRB-approved consent, which this page does not
+  cover.</p>
+</body>
+</html>`);
+});
+
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
@@ -178,11 +233,43 @@ app.get('*', (req, res) => {
 
 // Only start listening when run directly (not when imported by tests)
 if (require.main === module) {
-  initSchema().then(() => {
-    app.listen(PORT, () => {
-      console.log(`OBLD 500 Simulation Suite running on port ${PORT}`);
+  let loadedInstruments = null;
+  try {
+    loadedInstruments = instrumentLoader.load();
+    console.log('[CheckIn] Instruments loaded and validated');
+  } catch (err) {
+    // Do not process.exit here: a bad instrument JSON file should only take
+    // down the check-in feature, not the whole app (chat, sessions, SPA).
+    // Check-in's own routes will 500 per-request until this is fixed and
+    // redeployed -- Express 4 catches the synchronous throw from a later
+    // ensureLoaded() retry inside the route handler, so it degrades to a
+    // per-request error rather than crashing the process.
+    console.error('[CheckIn] Instrument validation failed at boot -- check-in endpoints will error until this is fixed and redeployed:', err.message);
+  }
+
+  Promise.all([initSchema(), checkinDb.initCheckinSchema()])
+    .then(async () => {
+      if (loadedInstruments) {
+        for (const instrument of loadedInstruments.values()) {
+          try {
+            await checkinDb.recordInstrumentVersion(instrument.course, instrument.module, 'baseline', instrument.version, instrument);
+            await checkinDb.recordInstrumentVersion(instrument.course, instrument.module, 'debrief', instrument.version, instrument);
+          } catch (err) {
+            // Same principle as above: this is audit bookkeeping, not
+            // load-bearing for chat/sessions/check-in's own request
+            // handling. Log and keep booting.
+            console.error(`[CheckIn] Failed to record instrument version for ${instrument.course}/${instrument.module}:`, err.message);
+          }
+        }
+      }
+      app.listen(PORT, () => {
+        console.log(`OBLD 500 Simulation Suite running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('[Boot] Unexpected error during startup:', err);
+      process.exit(1);
     });
-  });
 }
 
 module.exports = app;

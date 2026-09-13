@@ -23,6 +23,7 @@ client/             # React frontend (Vite build)
     suites/         # 4 suite components (simulations + observations)
 server/             # Express API proxy + persistence
   index.js          # Proxies /api/chat to Anthropic, persistence endpoints
+  checkin/          # Baseline/Debrief check-in module (see README's Check-In Module section)
 Dockerfile          # Multi-stage build: client (Vite) -> server (Express)
 nginx/, setup.sh    # Legacy DigitalOcean droplet path, no longer used
 ```
