@@ -5,6 +5,10 @@
 process.env.ANTHROPIC_API_KEY = 'test-key-not-real';
 process.env.NODE_ENV = 'test';
 
+// Check-in module test secrets (not real secrets -- fixed so tests are deterministic)
+process.env.CHECKIN_HMAC_SECRET = 'test-hmac-secret-not-real';
+process.env.CHECKIN_AES_KEY = 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY='; // base64 of 32 bytes
+
 // Default mock for global.fetch -- returns a successful Anthropic-style response.
 // Individual tests can override this with their own implementation.
 const mockAnthropicResponse = {
