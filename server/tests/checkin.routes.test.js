@@ -206,7 +206,7 @@ describe('POST /api/responses', () => {
   test('includes baseline_comparison in a debrief response when a baseline exists', async () => {
     mockFindLatestSubscaleScores.mockResolvedValueOnce([
       { subscale_id: 'sensing', mean: 5, n_items: 5 },
-      { subscale_id: 'attending', mean: 4, n_items: 5 },
+      { subscale_id: 'leadership_application', mean: 4, n_items: 5 },
       { subscale_id: 'processing', mean: 5, n_items: 5 },
       { subscale_id: 'responding', mean: 5, n_items: 5 },
     ]);
@@ -218,10 +218,10 @@ describe('POST /api/responses', () => {
         open_ended: { AL_Q1: 'A'.repeat(40), AL_Q2: 'B'.repeat(40), AL_Q3: 'C'.repeat(40) },
       },
     };
-    // AL05 is the sensing subscale's reverse-scored item (see instruments/AL.json),
-    // so raw 3 -> scored 5, keeping the whole sensing subscale at a scored mean of 5
-    // to match the mocked baseline mean and produce an exact zero delta below.
-    body.answers = { ...body.answers, AL05: 3 };
+    // AL.json's real content has no reverse-scored items, so the sensing
+    // subscale's scored mean is just the raw mean; validBaselineBody() already
+    // answers every item 5, matching the mocked baseline mean of 5 below and
+    // producing an exact zero delta.
     const res = await request(app).post('/api/responses').send(body);
     expect(res.status).toBe(200);
     expect(res.body.baseline_comparison).toBeDefined();
@@ -233,9 +233,10 @@ describe('POST /api/responses', () => {
   });
 
   test('handles a debrief subscale with no matching prior baseline (instrument drift)', async () => {
-    // Baseline is missing the "attending" subscale entirely (e.g. an admin reloaded
-    // a changed instrument between this participant's baseline and debrief). The
-    // other three subscales still have a matching baseline entry.
+    // Baseline is missing the "leadership_application" subscale entirely (e.g.
+    // an admin reloaded a changed instrument between this participant's
+    // baseline and debrief). The other three subscales still have a matching
+    // baseline entry.
     mockFindLatestSubscaleScores.mockResolvedValueOnce([
       { subscale_id: 'sensing', mean: 5, n_items: 5 },
       { subscale_id: 'processing', mean: 5, n_items: 5 },
@@ -254,10 +255,10 @@ describe('POST /api/responses', () => {
     expect(res.body.baseline_comparison).toBeDefined();
     expect(res.body.baseline_comparison).toHaveLength(4);
 
-    const attending = res.body.baseline_comparison.find((c) => c.subscale_id === 'attending');
-    expect(attending.baseline_mean).toBeNull();
-    expect(attending.delta).toBeNull();
-    expect(attending.debrief_mean).not.toBeNull();
+    const leadershipApplication = res.body.baseline_comparison.find((c) => c.subscale_id === 'leadership_application');
+    expect(leadershipApplication.baseline_mean).toBeNull();
+    expect(leadershipApplication.delta).toBeNull();
+    expect(leadershipApplication.debrief_mean).not.toBeNull();
 
     const sensing = res.body.baseline_comparison.find((c) => c.subscale_id === 'sensing');
     expect(sensing.baseline_mean).not.toBeNull();
