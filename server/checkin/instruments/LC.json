@@ -1,0 +1,93 @@
+{
+ "course": "OBLD500",
+ "module": 6,
+ "abbrev": "LC",
+ "topic": "Leadership Coaching",
+ "version": "2027.01",
+ "scale": {
+  "points": 7,
+  "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ },
+ "intro": {
+  "baseline": "This questionnaire measures your current coaching mindset and skills, aligned to the ICF Core Competencies. Respond based on how you currently behave in developmental conversations, not how you think you should behave. There are no right or wrong answers.",
+  "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+ },
+ "subscales": [
+  {
+   "id": "coaching_mindset_and_ethics",
+   "name": "Coaching Mindset and Ethics",
+   "help": "These items measure your coaching mindset, ethical awareness, and self-reflection as a leader. (ICF Competencies 1 and 2)",
+   "items": [
+    {"id": "LC01", "text": "I approach developmental conversations with genuine curiosity about the other person's perspective rather than a predetermined agenda.", "reverse": false},
+    {"id": "LC02", "text": "I maintain clear boundaries between coaching conversations and performance evaluations.", "reverse": false},
+    {"id": "LC03", "text": "I am aware of how my own biases, assumptions, and emotional reactions affect my ability to coach effectively.", "reverse": false},
+    {"id": "LC04", "text": "When a team member shares something sensitive during a coaching conversation, I am transparent about any limits to confidentiality.", "reverse": false}
+   ]
+  },
+  {
+   "id": "cultivating_trust_and_presence",
+   "name": "Cultivating Trust and Presence",
+   "help": "These items measure your ability to create safe, present coaching interactions. (ICF Competencies 4 and 5)",
+   "items": [
+    {"id": "LC05", "text": "I create a safe, nonjudgmental space where team members feel comfortable sharing their real concerns.", "reverse": false},
+    {"id": "LC06", "text": "During coaching conversations, I am fully present rather than mentally preparing my response.", "reverse": false},
+    {"id": "LC07", "text": "I am comfortable sitting with silence during a conversation rather than feeling the need to fill it.", "reverse": false},
+    {"id": "LC08", "text": "I find it difficult to resist checking my phone or thinking about other tasks during one-on-one conversations.", "reverse": true}
+   ]
+  },
+  {
+   "id": "listening_and_evoking_awareness",
+   "name": "Listening and Evoking Awareness",
+   "help": "These items measure your listening depth and ability to evoke insight through questioning. (ICF Competencies 6 and 7)",
+   "items": [
+    {"id": "LC09", "text": "I reflect back what I hear to ensure I understand what the other person is communicating.", "reverse": false},
+    {"id": "LC10", "text": "I notice what a team member is not saying, as well as what they are saying.", "reverse": false},
+    {"id": "LC11", "text": "I ask open-ended questions that help team members think more deeply about their situations.", "reverse": false},
+    {"id": "LC12", "text": "When a team member brings me a problem, my first instinct is to provide a solution rather than ask questions.", "reverse": true},
+    {"id": "LC13", "text": "I help team members explore their own assumptions and consider alternative perspectives.", "reverse": false}
+   ]
+  },
+  {
+   "id": "facilitating_growth_and_action",
+   "name": "Facilitating Growth and Action",
+   "help": "These items measure your ability to support autonomous goal-setting and accountability. (ICF Competency 8)",
+   "items": [
+    {"id": "LC14", "text": "I support team members in setting their own development goals rather than setting goals for them.", "reverse": false},
+    {"id": "LC15", "text": "I help team members identify specific next steps and accountability structures after a coaching conversation.", "reverse": false}
+   ]
+  },
+  {
+   "id": "leadership_application",
+   "name": "Leadership Application",
+   "help": "These items measure how you apply coaching skills in your broader leadership practice.",
+   "items": [
+    {"id": "LC16", "text": "I use coaching skills to help team members navigate career decisions and professional crossroads.", "reverse": false},
+    {"id": "LC17", "text": "I adjust my coaching approach based on the individual needs, style, and readiness of each team member.", "reverse": false},
+    {"id": "LC18", "text": "I use a structured framework (such as the GROW model) to guide developmental conversations.", "reverse": false},
+    {"id": "LC19", "text": "I can distinguish between situations that call for coaching and situations that call for directing, mentoring, or referring.", "reverse": false},
+    {"id": "LC20", "text": "I regularly practice and seek to improve my coaching skills as a leader.", "reverse": false}
+   ]
+  }
+ ],
+ "debrief_extras": {
+  "post_experience": {
+   "name": "Post-Experience Reflection",
+   "items": [
+    {"id": "LC_PX1", "text": "This module changed how I think about coaching as a leadership skill.", "reverse": false},
+    {"id": "LC_PX2", "text": "The observation scenario helped me understand what it feels like to be coached effectively.", "reverse": false},
+    {"id": "LC_PX3", "text": "The AI simulation challenged me to practice coaching in a realistic way.", "reverse": false},
+    {"id": "LC_PX4", "text": "I feel more confident in my ability to use coaching skills in difficult workplace conversations.", "reverse": false},
+    {"id": "LC_PX5", "text": "This training plan gave me practical tools I can use the next time I coach someone on my team.", "reverse": false}
+   ]
+  },
+  "open_ended": [
+   {"id": "LC_Q1", "prompt": "Describe a specific moment during this module that changed your understanding of coaching as a leadership skill."},
+   {"id": "LC_Q2", "prompt": "What was the most challenging aspect of the AI simulation? What made it difficult to stay in coach mode?"},
+   {"id": "LC_Q3", "prompt": "How do you plan to apply what you learned about leadership coaching in your practice going forward?"}
+  ]
+ },
+ "completion": {
+  "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
+  "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+ }
+}

@@ -1,87 +1,88 @@
 {
-  "course": "OBLD500",
-  "module": 4,
-  "abbrev": "AL",
-  "topic": "Active Listening",
-  "version": "dev-fixture-v1",
-  "scale": {
-    "points": 7,
-    "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree",
-               "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ "course": "OBLD500",
+ "module": 4,
+ "abbrev": "AL",
+ "topic": "Active Listening",
+ "version": "2027.01",
+ "min_reverse_items": 0,
+ "psychometric_note": "Sections A to C adapt the Active-Empathic Listening Scale (Bodie, 2011), which is positively keyed throughout; Section D adds custom leadership application items. No reverse-scored items by design, matching the deployed instrument.",
+ "scale": {
+  "points": 7,
+  "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ },
+ "intro": {
+  "baseline": "This questionnaire measures your current active listening skills across four dimensions. Respond based on how you currently behave in your professional interactions, not how you think you should behave. There are no right or wrong answers.",
+  "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+ },
+ "subscales": [
+  {
+   "id": "sensing",
+   "name": "Sensing",
+   "help": "These items assess your ability to pick up verbal and nonverbal cues, including emotions and what is left unsaid.",
+   "items": [
+    {"id": "AL01", "text": "I am sensitive to what others are not saying during conversations.", "reverse": false},
+    {"id": "AL02", "text": "I am aware of what team members imply but do not explicitly state.", "reverse": false},
+    {"id": "AL03", "text": "I understand how others feel, even when they do not directly express it.", "reverse": false},
+    {"id": "AL04", "text": "I listen for more than just the spoken words in workplace interactions.", "reverse": false},
+    {"id": "AL05", "text": "I notice changes in tone, pace, or body language that signal unspoken concerns.", "reverse": false}
+   ]
   },
-  "intro": {
-    "baseline": "This questionnaire measures your current active listening skills across four dimensions. Respond based on how you currently behave in your professional interactions, not how you think you should behave. There are no right or wrong answers.",
-    "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+  {
+   "id": "processing",
+   "name": "Processing",
+   "help": "These items assess your ability to organize, connect, and make sense of what you hear.",
+   "items": [
+    {"id": "AL06", "text": "I keep track of key points others make during discussions.", "reverse": false},
+    {"id": "AL07", "text": "I mentally organize what I hear to identify patterns and themes.", "reverse": false},
+    {"id": "AL08", "text": "I consider multiple perspectives before forming my response.", "reverse": false},
+    {"id": "AL09", "text": "I summarize points of agreement and disagreement when appropriate.", "reverse": false},
+    {"id": "AL10", "text": "I connect what someone is saying now to what they have shared previously.", "reverse": false}
+   ]
   },
-  "subscales": [
-    {
-      "id": "sensing",
-      "name": "Sensing",
-      "help": "Picking up verbal and nonverbal cues, including emotions and what is left unsaid.",
-      "items": [
-        {"id": "AL01", "text": "I am sensitive to what others are not saying during conversations.", "reverse": false},
-        {"id": "AL02", "text": "I am aware of what team members imply but do not explicitly state.", "reverse": false},
-        {"id": "AL03", "text": "I notice shifts in tone of voice that signal how someone really feels.", "reverse": false},
-        {"id": "AL04", "text": "I pick up on body language that contradicts what a person is saying.", "reverse": false},
-        {"id": "AL05", "text": "I often miss emotional cues that other people notice right away.", "reverse": true}
-      ]
-    },
-    {
-      "id": "attending",
-      "name": "Attending",
-      "help": "Giving the speaker full, undivided focus without distraction.",
-      "items": [
-        {"id": "AL06", "text": "I give my full attention to the person speaking, even when I am busy.", "reverse": false},
-        {"id": "AL07", "text": "I maintain appropriate eye contact and open body language while listening.", "reverse": false},
-        {"id": "AL08", "text": "My mind often wanders to other tasks while someone is talking to me.", "reverse": true},
-        {"id": "AL09", "text": "I put away distractions such as my phone or laptop during important conversations.", "reverse": false},
-        {"id": "AL10", "text": "I stay present in a conversation even when I disagree with what is being said.", "reverse": false}
-      ]
-    },
-    {
-      "id": "processing",
-      "name": "Processing",
-      "help": "Making sense of what is said by organizing and interpreting the message accurately.",
-      "items": [
-        {"id": "AL11", "text": "I accurately restate what someone has said in my own words.", "reverse": false},
-        {"id": "AL12", "text": "I connect what a person is telling me now to things they have said before.", "reverse": false},
-        {"id": "AL13", "text": "I check my understanding by summarizing before responding.", "reverse": false},
-        {"id": "AL14", "text": "I sometimes assume I understand a person's point before they finish explaining it.", "reverse": true},
-        {"id": "AL15", "text": "I distinguish between the facts someone shares and my own interpretation of them.", "reverse": false}
-      ]
-    },
-    {
-      "id": "responding",
-      "name": "Responding",
-      "help": "Responding in ways that show understanding and invite the speaker to continue.",
-      "items": [
-        {"id": "AL16", "text": "I ask open-ended questions that encourage the other person to share more.", "reverse": false},
-        {"id": "AL17", "text": "I hold back my own opinion until I fully understand the other person's point of view.", "reverse": false},
-        {"id": "AL18", "text": "I tend to interrupt before the other person has finished their thought.", "reverse": true},
-        {"id": "AL19", "text": "I acknowledge a person's feelings before offering a solution.", "reverse": false},
-        {"id": "AL20", "text": "My responses show the speaker that I understood what mattered most to them.", "reverse": false}
-      ]
-    }
-  ],
-  "debrief_extras": {
-    "post_experience": {
-      "name": "Post-Experience Reflection",
-      "items": [
-        {"id": "AL_PX1", "text": "This module improved my understanding of active listening.", "reverse": false},
-        {"id": "AL_PX2", "text": "The observation scenario helped me see listening from the speaker's perspective.", "reverse": false},
-        {"id": "AL_PX3", "text": "The simulation gave me realistic practice with active listening skills.", "reverse": false},
-        {"id": "AL_PX4", "text": "I feel more confident applying active listening in my leadership practice.", "reverse": false},
-        {"id": "AL_PX5", "text": "I would recommend this kind of practice to other leadership students.", "reverse": false}
-      ]
-    },
-    "open_ended": [
-      {"id": "AL_Q1", "prompt": "Describe the most important insight about active listening you gained from this module."},
-      {"id": "AL_Q2", "prompt": "Which moment in the observation or simulation had the greatest impact on you, and why?"},
-      {"id": "AL_Q3", "prompt": "How will you apply what you learned in your leadership practice going forward?"}
-    ]
+  {
+   "id": "responding",
+   "name": "Responding",
+   "help": "These items assess your ability to demonstrate through words and behavior that you have genuinely listened.",
+   "items": [
+    {"id": "AL11", "text": "I use verbal acknowledgments to show others I am listening.", "reverse": false},
+    {"id": "AL12", "text": "I ask questions that demonstrate my understanding of others' positions.", "reverse": false},
+    {"id": "AL13", "text": "I show others I am listening through my body language (e.g., eye contact, head nods).", "reverse": false},
+    {"id": "AL14", "text": "I assure others that I am receptive to their ideas, even when I disagree.", "reverse": false},
+    {"id": "AL15", "text": "I paraphrase what others say to confirm my understanding before responding.", "reverse": false}
+   ]
   },
-  "completion": {
-    "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
-    "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+  {
+   "id": "leadership_application",
+   "name": "Leadership Application",
+   "help": "These items assess how you apply listening skills in your leadership practice.",
+   "items": [
+    {"id": "AL16", "text": "I create an environment where team members feel safe sharing honest feedback.", "reverse": false},
+    {"id": "AL17", "text": "I adjust my leadership approach based on what I learn through listening.", "reverse": false},
+    {"id": "AL18", "text": "I follow through on concerns raised by team members to demonstrate that their input matters.", "reverse": false},
+    {"id": "AL19", "text": "I use active listening to build trust with individuals at all levels of the organization.", "reverse": false},
+    {"id": "AL20", "text": "I resist the urge to provide solutions before fully understanding a team member's perspective.", "reverse": false}
+   ]
   }
+ ],
+ "debrief_extras": {
+  "post_experience": {
+   "name": "Post-Experience Reflection",
+   "items": [
+    {"id": "AL_PX1", "text": "This module improved my understanding of active listening.", "reverse": false},
+    {"id": "AL_PX2", "text": "The observation scenario helped me see listening from the speaker's perspective.", "reverse": false},
+    {"id": "AL_PX3", "text": "The AI simulation gave me realistic practice with active listening skills.", "reverse": false},
+    {"id": "AL_PX4", "text": "I feel more confident in my ability to apply active listening in my leadership practice.", "reverse": false},
+    {"id": "AL_PX5", "text": "I would recommend this kind of practice to other leadership students.", "reverse": false}
+   ]
+  },
+  "open_ended": [
+   {"id": "AL_Q1", "prompt": "Describe the most important insight about active listening you gained from this training plan."},
+   {"id": "AL_Q2", "prompt": "Which moment in the observation or simulation had the greatest impact on you? Why?"},
+   {"id": "AL_Q3", "prompt": "How do you plan to apply what you learned about active listening in your leadership practice going forward?"}
+  ]
+ },
+ "completion": {
+  "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
+  "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+ }
 }

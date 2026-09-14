@@ -2,6 +2,23 @@ const { scoreItem, scoreAllItems, computeSubscaleScores, isStraightline } = requ
 
 const instrument = require('../checkin/instruments/AL.json');
 
+// AL.json (the real, deployed AELS-based instrument) has zero reverse-scored
+// items by design -- see its own psychometric_note. It can't exercise
+// reverse-scoring behavior, so this tiny synthetic instrument keeps that
+// coverage independent of whatever the real instrument's content happens to
+// contain.
+const reverseItemInstrument = {
+  subscales: [
+    {
+      id: 'synthetic',
+      items: [
+        { id: 'S01', reverse: false },
+        { id: 'S02', reverse: true },
+      ],
+    },
+  ],
+};
+
 function allSevens() {
   const answers = {};
   instrument.subscales.forEach((s) => s.items.forEach((item) => { answers[item.id] = 7; }));
@@ -27,8 +44,14 @@ describe('scoreAllItems', () => {
     expect(rows).toHaveLength(20);
     const al01 = rows.find((r) => r.item_id === 'AL01');
     expect(al01).toEqual({ item_id: 'AL01', raw_value: 7, scored_value: 7 }); // not reverse
-    const al05 = rows.find((r) => r.item_id === 'AL05');
-    expect(al05).toEqual({ item_id: 'AL05', raw_value: 7, scored_value: 1 }); // reverse
+  });
+
+  test('scores a reverse item as 8 minus the raw value', () => {
+    const rows = scoreAllItems(reverseItemInstrument, { S01: 7, S02: 7 });
+    const s01 = rows.find((r) => r.item_id === 'S01');
+    const s02 = rows.find((r) => r.item_id === 'S02');
+    expect(s01).toEqual({ item_id: 'S01', raw_value: 7, scored_value: 7 }); // not reverse
+    expect(s02).toEqual({ item_id: 'S02', raw_value: 7, scored_value: 1 }); // reverse
   });
 });
 
@@ -36,11 +59,19 @@ describe('computeSubscaleScores', () => {
   test('computes the mean scored value per subscale', () => {
     const answers = allSevens();
     const scores = computeSubscaleScores(instrument, answers);
-    // sensing subscale: AL01-04 are 7 (not reverse), AL05 is reverse so scores 1
-    // mean = (7+7+7+7+1)/5 = 5.8
+    // sensing subscale: all 5 items are non-reverse in the real AL.json, so
+    // every raw 7 scores as 7; mean = 7
     const sensing = scores.find((s) => s.subscale_id === 'sensing');
-    expect(sensing.mean).toBe(5.8);
+    expect(sensing.mean).toBe(7);
     expect(sensing.n_items).toBe(5);
+  });
+
+  test('accounts for reverse-scored items in the subscale mean', () => {
+    const scores = computeSubscaleScores(reverseItemInstrument, { S01: 7, S02: 7 });
+    // S01 is not reverse (scores 7), S02 is reverse (scores 8-7=1); mean = (7+1)/2 = 4
+    const synthetic = scores.find((s) => s.subscale_id === 'synthetic');
+    expect(synthetic.mean).toBe(4);
+    expect(synthetic.n_items).toBe(2);
   });
 
   test('returns one entry per subscale', () => {

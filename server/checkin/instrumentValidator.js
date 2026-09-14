@@ -94,9 +94,21 @@ function validateInstrument(data) {
     errors.push('item ids must be unique across the instrument');
   }
 
+  // Default minimum of 2 reverse-scored items (acquiescence control). An instrument that adapts a
+  // positively keyed validated scale may declare min_reverse_items (for example 0) with a psychometric_note.
+  let minReverse = 2;
+  if (data.min_reverse_items !== undefined) {
+    if (!Number.isInteger(data.min_reverse_items) || data.min_reverse_items < 0) {
+      errors.push('min_reverse_items, if present, must be a non-negative integer');
+    } else if (!data.psychometric_note || typeof data.psychometric_note !== 'string') {
+      errors.push('min_reverse_items requires a psychometric_note explaining the override');
+    } else {
+      minReverse = data.min_reverse_items;
+    }
+  }
   const reverseCount = allItems.filter((item) => item.reverse === true).length;
-  if (reverseCount < 2) {
-    errors.push(`instrument must have at least 2 reverse-scored items, found ${reverseCount}`);
+  if (reverseCount < minReverse) {
+    errors.push(`instrument must have at least ${minReverse} reverse-scored items, found ${reverseCount}`);
   }
 
   const px = data.debrief_extras && data.debrief_extras.post_experience;

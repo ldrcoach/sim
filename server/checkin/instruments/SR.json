@@ -1,0 +1,86 @@
+{
+ "course": "OBLD500",
+ "module": 1,
+ "abbrev": "SR",
+ "topic": "Scholarly Research, AI, and APA Style",
+ "version": "2027.01",
+ "scale": {
+  "points": 7,
+  "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ },
+ "intro": {
+  "baseline": "This questionnaire measures your current research literacy, search skills, AI literacy, and APA fluency. Respond based on what you actually do now, not what you think you should do. There are no right or wrong answers.",
+  "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+ },
+ "subscales": [
+  {
+   "id": "research_literacy_and_evidence_based_thinking",
+   "name": "Research Literacy and Evidence-Based Thinking",
+   "help": "Evidence-based thinking and the ability to judge research quality.",
+   "items": [
+    {"id": "SR01", "text": "I can clearly explain the difference between a peer-reviewed journal article and a popular press article.", "reverse": false},
+    {"id": "SR02", "text": "When making important professional decisions, I actively seek out research evidence rather than relying solely on experience or intuition.", "reverse": false},
+    {"id": "SR03", "text": "I understand the concept of evidence-based management and can describe its key components.", "reverse": false},
+    {"id": "SR04", "text": "I can evaluate the quality of a research study by considering factors like sample size, methodology, and peer-review status.", "reverse": false},
+    {"id": "SR05", "text": "I view myself as a scholar-practitioner who integrates research into leadership practice.", "reverse": false}
+   ]
+  },
+  {
+   "id": "information_search_and_retrieval",
+   "name": "Information Search and Retrieval",
+   "help": "Finding peer-reviewed sources efficiently through the Hunt Library.",
+   "items": [
+    {"id": "SR06", "text": "I am confident in my ability to use academic databases (such as Business Source Complete or SAGE Journals) to find relevant peer-reviewed articles.", "reverse": false},
+    {"id": "SR07", "text": "I can construct an effective database search using Boolean operators and appropriate limiters.", "reverse": false},
+    {"id": "SR08", "text": "I find it difficult to locate full-text, peer-reviewed articles through my university library system.", "reverse": true},
+    {"id": "SR09", "text": "I know how to generate and share a Primo permalink for an article I find in the ERAU Hunt Library.", "reverse": false},
+    {"id": "SR10", "text": "I can efficiently narrow a large set of search results to a manageable number of highly relevant articles.", "reverse": false}
+   ]
+  },
+  {
+   "id": "ai_literacy_and_ethical_use",
+   "name": "AI Literacy and Ethical Use",
+   "help": "Using AI tools appropriately and critically in academic work.",
+   "items": [
+    {"id": "SR11", "text": "I understand the capabilities and limitations of AI tools (such as ChatGPT, Claude, or Gemini) for academic research and writing.", "reverse": false},
+    {"id": "SR12", "text": "I can distinguish between appropriate and inappropriate uses of AI tools in academic work.", "reverse": false},
+    {"id": "SR13", "text": "I know how to cite AI-generated content following current APA guidelines.", "reverse": false},
+    {"id": "SR14", "text": "I critically evaluate AI-generated output rather than accepting it at face value.", "reverse": false},
+    {"id": "SR15", "text": "I am unsure about the ethical boundaries of using AI tools in my academic work.", "reverse": true}
+   ]
+  },
+  {
+   "id": "apa_style_and_scholarly_communication",
+   "name": "APA Style and Scholarly Communication",
+   "help": "Writing and citing in APA 7 style.",
+   "items": [
+    {"id": "SR16", "text": "I can format an APA 7 reference entry for common source types (journal article, book, website, video).", "reverse": false},
+    {"id": "SR17", "text": "I can write correct in-text citations in both narrative and parenthetical formats.", "reverse": false},
+    {"id": "SR18", "text": "I understand the purpose and structure of APA heading levels.", "reverse": false},
+    {"id": "SR19", "text": "I can identify and correct common APA formatting errors in my own writing.", "reverse": false},
+    {"id": "SR20", "text": "I am confident that my academic writing meets the APA style expectations of my program.", "reverse": false}
+   ]
+  }
+ ],
+ "debrief_extras": {
+  "post_experience": {
+   "name": "Post-Experience Reflection",
+   "items": [
+    {"id": "SR_PX1", "text": "The training plan activities helped me develop practical skills I will use in my academic work.", "reverse": false},
+    {"id": "SR_PX2", "text": "The observation scenarios helped me see how a research mentor evaluates sources and guides a search.", "reverse": false},
+    {"id": "SR_PX3", "text": "The simulation gave me realistic practice at steering someone toward peer-reviewed evidence and responsible AI use.", "reverse": false},
+    {"id": "SR_PX4", "text": "I feel more confident in my ability to evaluate the quality of a research source.", "reverse": false},
+    {"id": "SR_PX5", "text": "The skills I practiced in this training plan will change how I approach research assignments going forward.", "reverse": false}
+   ]
+  },
+  "open_ended": [
+   {"id": "SR_Q1", "prompt": "Describe a specific skill or concept from this training plan that you expect to use most frequently in your graduate studies."},
+   {"id": "SR_Q2", "prompt": "What was the most challenging aspect of the training plan for you? What made it difficult?"},
+   {"id": "SR_Q3", "prompt": "How do you plan to integrate evidence-based thinking into your leadership practice?"}
+  ]
+ },
+ "completion": {
+  "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
+  "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+ }
+}

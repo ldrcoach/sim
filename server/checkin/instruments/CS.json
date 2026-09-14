@@ -1,0 +1,86 @@
+{
+ "course": "OBLD500",
+ "module": 8,
+ "abbrev": "CS",
+ "topic": "Coaching Supervision",
+ "version": "2027.01",
+ "scale": {
+  "points": 7,
+  "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ },
+ "intro": {
+  "baseline": "This questionnaire measures your current understanding of coaching supervision, supervision skills, ethical awareness, and leadership application. Respond based on how you feel now. There are no right or wrong answers.",
+  "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+ },
+ "subscales": [
+  {
+   "id": "supervision_awareness",
+   "name": "Supervision Awareness",
+   "help": "These items assess your understanding of what coaching supervision is, how it differs from related practices, and why it matters.",
+   "items": [
+    {"id": "CS01", "text": "I understand how coaching supervision differs from mentoring, management oversight, and therapy.", "reverse": false},
+    {"id": "CS02", "text": "I can identify the three core functions of coaching supervision (normative, formative, restorative).", "reverse": false},
+    {"id": "CS03", "text": "I recognize that my own emotional reactions during coaching sessions contain valuable information about the coaching relationship.", "reverse": false},
+    {"id": "CS04", "text": "I am aware of how dynamics in one professional relationship can mirror dynamics in another (parallel process).", "reverse": false},
+    {"id": "CS05", "text": "Coaching supervision seems unnecessary for experienced coaches who are already effective.", "reverse": true}
+   ]
+  },
+  {
+   "id": "supervision_skills",
+   "name": "Supervision Skills",
+   "help": "These items assess your ability to use supervision-related skills in professional conversations.",
+   "items": [
+    {"id": "CS06", "text": "I can examine a coaching case from multiple perspectives, not just the client's presenting issue.", "reverse": false},
+    {"id": "CS07", "text": "I am able to shift between focusing on content (what happened) and process (what is happening between people) in a reflective conversation.", "reverse": false},
+    {"id": "CS08", "text": "I can ask reflective questions that help another person develop their own insight rather than providing answers.", "reverse": false},
+    {"id": "CS09", "text": "I can balance offering support with providing appropriate challenge in a developmental conversation.", "reverse": false},
+    {"id": "CS10", "text": "I can identify when my own assumptions or emotional reactions may be influencing a coaching or leadership interaction.", "reverse": false}
+   ]
+  },
+  {
+   "id": "supervision_as_ethical_professional_practice",
+   "name": "Supervision as Ethical & Professional Practice",
+   "help": "These items assess your understanding of supervision's role in ethical coaching practice.",
+   "items": [
+    {"id": "CS11", "text": "I understand how coaching supervision contributes to ethical decision-making in professional practice.", "reverse": false},
+    {"id": "CS12", "text": "I recognize that even well-intentioned coaching can produce negative effects for clients without adequate reflection.", "reverse": false},
+    {"id": "CS13", "text": "A good coach can rely on their intuition and experience without needing external supervision.", "reverse": true},
+    {"id": "CS14", "text": "I see coaching supervision as a professional responsibility, not just a development opportunity.", "reverse": false},
+    {"id": "CS15", "text": "I can articulate why professional coaching bodies require or recommend supervision for credentialed coaches.", "reverse": false}
+   ]
+  },
+  {
+   "id": "leadership_application",
+   "name": "Leadership Application",
+   "help": "These items assess how you apply supervision-related principles in your leadership practice.",
+   "items": [
+    {"id": "CS16", "text": "I create structured opportunities for my team to reflect on their professional practice.", "reverse": false},
+    {"id": "CS17", "text": "I adjust my leadership approach based on what I learn through reflective conversations.", "reverse": false},
+    {"id": "CS18", "text": "I use the concept of 'multiple lenses' (examining situations from several perspectives) in my leadership decision-making.", "reverse": false},
+    {"id": "CS19", "text": "I recognize when parallel dynamics are at play, where patterns in one relationship mirror patterns in another.", "reverse": false},
+    {"id": "CS20", "text": "I model openness to feedback and willingness to examine my own blind spots as a leader.", "reverse": false}
+   ]
+  }
+ ],
+ "debrief_extras": {
+  "post_experience": {
+   "name": "Post-Experience Reflection",
+   "items": [
+    {"id": "CS_PX1", "text": "This module changed my understanding of coaching supervision.", "reverse": false},
+    {"id": "CS_PX2", "text": "The observation scenario helped me understand what effective supervision feels like from the supervisee's perspective.", "reverse": false},
+    {"id": "CS_PX3", "text": "The AI simulation gave me practical experience I could not have gained from reading alone.", "reverse": false},
+    {"id": "CS_PX4", "text": "I feel more prepared to engage in or facilitate coaching supervision conversations after this experience.", "reverse": false},
+    {"id": "CS_PX5", "text": "The combination of content, observation, and simulation created a more complete learning experience than any single method would have.", "reverse": false}
+   ]
+  },
+  "open_ended": [
+   {"id": "CS_Q1", "prompt": "What was the most significant insight you gained from this training plan about coaching supervision? How might it change your leadership practice?"},
+   {"id": "CS_Q2", "prompt": "Describe a moment during the observation or simulation that surprised you or challenged your assumptions."},
+   {"id": "CS_Q3", "prompt": "How has your understanding of reflective practice and the role of supervision evolved through this experience?"}
+  ]
+ },
+ "completion": {
+  "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
+  "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+ }
+}
