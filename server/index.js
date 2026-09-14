@@ -255,7 +255,7 @@ app.get('*', (req, res) => {
       // Express's default handler would have logged this (visible in prod
       // container logs); replicate that so a real failure here -- e.g. a
       // broken image missing client/dist -- doesn't fail silently.
-      console.error('[SPA fallback] sendFile failed:', err.message);
+      console.error('[SPA fallback] sendFile failed:', err.stack || err.message);
       res.status(err.status || 500).end();
     }
   });
@@ -270,8 +270,11 @@ app.get('*', (req, res) => {
 // fixes for one specific route, generalized here for every other route.
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error('[Unhandled error]', err.message);
-  if (res.headersSent) return;
+  console.error('[Unhandled error]', err.stack || err.message);
+  // Match Express's own documented pattern: if a response is already
+  // underway, delegate to its default handler to abort/destroy the
+  // connection properly rather than leaving the request hanging.
+  if (res.headersSent) return next(err);
   res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.instructure.com");
   res.status(err.status || 500).json({ error: 'Internal server error' });
 });
