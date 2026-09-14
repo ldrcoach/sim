@@ -165,7 +165,27 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
       subscaleScores,
     });
 
-    res.json({ completion_code: code, subscale_means: subscaleScores });
+    let baselineComparison;
+    if (phase === 'debrief') {
+      const baselineScores = await checkinDb.findLatestSubscaleScores(participantId, course, moduleNum, 'baseline');
+      if (baselineScores) {
+        baselineComparison = subscaleScores.map((debriefScore) => {
+          const baselineScore = baselineScores.find((b) => b.subscale_id === debriefScore.subscale_id);
+          return {
+            subscale_id: debriefScore.subscale_id,
+            baseline_mean: baselineScore ? baselineScore.mean : null,
+            debrief_mean: debriefScore.mean,
+            delta: baselineScore ? Math.round((debriefScore.mean - baselineScore.mean) * 100) / 100 : null,
+          };
+        });
+      }
+    }
+
+    res.json({
+      completion_code: code,
+      subscale_means: subscaleScores,
+      ...(baselineComparison ? { baseline_comparison: baselineComparison } : {}),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

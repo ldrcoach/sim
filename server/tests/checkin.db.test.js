@@ -231,3 +231,19 @@ describe('deleteParticipant', () => {
     expect(result.participant_deleted).toBe(false);
   });
 });
+
+describe('findLatestSubscaleScores', () => {
+  test('returns the subscale scores for the most recent matching response', async () => {
+    const rows = [{ subscale_id: 'sensing', mean: '5.80', n_items: 5 }];
+    mockQuery.mockResolvedValueOnce({ rows });
+    const scores = await checkinDb.findLatestSubscaleScores('p1', 'OBLD500', 4, 'baseline');
+    expect(scores).toEqual([{ subscale_id: 'sensing', mean: 5.8, n_items: 5 }]);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('ORDER BY submitted_at DESC, id DESC LIMIT 1'), ['p1', 'OBLD500', 4, 'baseline']);
+  });
+
+  test('returns null when there is no matching response', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    const scores = await checkinDb.findLatestSubscaleScores('p1', 'OBLD500', 4, 'baseline');
+    expect(scores).toBeNull();
+  });
+});

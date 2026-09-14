@@ -237,6 +237,23 @@ async function deleteParticipant(participantId) {
   return { responses_deleted: responsesResult.rowCount, participant_deleted: participantResult.rowCount > 0 };
 }
 
+async function findLatestSubscaleScores(participantId, course, moduleNum, phase) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT css.subscale_id, css.mean, css.n_items
+     FROM checkin_subscale_scores css
+     WHERE css.response_id = (
+       SELECT id FROM checkin_responses
+       WHERE participant_id = $1 AND course = $2 AND module = $3 AND phase = $4
+       ORDER BY submitted_at DESC, id DESC LIMIT 1
+     )`,
+    [participantId, course, moduleNum, phase]
+  );
+  return result.rows.length
+    ? result.rows.map((r) => ({ subscale_id: r.subscale_id, mean: Number(r.mean), n_items: r.n_items }))
+    : null;
+}
+
 module.exports = {
   isAvailable,
   initCheckinSchema,
@@ -251,4 +268,5 @@ module.exports = {
   getExportLongRows,
   getExportPairedRows,
   deleteParticipant,
+  findLatestSubscaleScores,
 };
