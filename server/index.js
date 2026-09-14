@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { getPool, isAvailable, initSchema } = require('./db');
 const checkinRoutes = require('./checkin/routes');
+const adminRoutes = require('./checkin/adminRoutes');
 const instrumentLoader = require('./checkin/instrumentLoader');
 const checkinDb = require('./checkin/db');
 const courses = require('./checkin/courses');
@@ -16,6 +17,7 @@ const PORT = process.env.PORT || 3000;
 // client IP instead of the proxy's.
 app.set('trust proxy', 1);
 
+app.use('/api/admin', adminRoutes);
 app.use('/api', checkinRoutes);
 
 app.use(express.json({ limit: '1mb' }));
