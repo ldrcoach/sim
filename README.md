@@ -35,9 +35,11 @@ Container Apps, Consumption plan.
   environment.
 - **Custom domain:** `sim.ldrcoach.com` -> `sim-prod`, via an Azure managed
   certificate (auto-renewing).
-- **Secrets:** pulled from Key Vault `ldrc-cortex-kv-dev`
-  (`ANTHROPIC_API_KEY`, and `DATABASE_URL` once persistence is wired) --
-  never set as plain env vars.
+- **Secrets:** pulled from Key Vault `ldrc-cortex-kv-dev` -- never set as
+  plain env vars. Currently: `ANTHROPIC_API_KEY`, `DATABASE_URL`, and (for
+  the Check-In Module) the check-in HMAC and AES keys
+  (`CHECKIN_HMAC_SECRET`/`CHECKIN_AES_KEY`) plus `CHECKIN_ADMIN_TOKEN`
+  (needed once the admin API is deployed).
 
 ### Deploying a new build
 
@@ -142,10 +144,28 @@ separate, not-yet-started task.
 - `GET /api/instrument/:course/:module/:phase` -- public instrument view (no reverse-scoring flags)
 - `POST /api/responses` -- submit a Baseline or Debrief response, returns a completion code
 
-**Not yet built** (see `docs/superpowers/plans/2026-09-13-checkin-module.md`
-for the full scope decisions): the admin API (verify/summary/export/delete),
-the "then and now" comparison panel, `key`/`none` identity modes, and the
-real instrument migration.
+**Built as of the admin/retention follow-up plan**
+(`docs/superpowers/plans/2026-09-13-checkin-admin.md`): the admin API,
+`courses.json` (per-course identity mode / retention config), the
+automatic retention purge job, and the "then and now" comparison panel on
+the Debrief confirmation screen.
+
+**Admin endpoints** (all require an `X-Admin-Token` header matching
+`CHECKIN_ADMIN_TOKEN`):
+- `GET /api/admin/verify?code=` -- check whether a completion code is real
+- `GET /api/admin/summary?course=` -- response counts by module/phase, straightlining counts, last submission time
+- `GET /api/admin/export?course=&format=json|csv&shape=long|paired` -- long: one row per item; paired: one row per participant per module with baseline/debrief means and deltas
+- `POST /api/admin/instruments/reload` -- re-read the instrument directory without redeploying
+- `DELETE /api/admin/participant?participant_id=` -- full erasure (responses and identity) for a right-to-erasure request
+- `POST /api/admin/purge-expired` -- the automatic retention job's actual logic; not scheduled by this repo, call it periodically from wherever you want the schedule to live (idempotent, safe to call repeatedly)
+
+**Still not built:** `key`/`none` identity modes (only `email` is
+implemented; `courses.json` can declare a different mode but the server
+rejects it with 501 until that mode actually exists), the real 18-Google-
+Forms-to-9-instrument-files migration (`AL.json` is still the only, still
+fixture, instrument), CSP `frame-ancestors` for Canvas iframe embedding,
+and the client-side `email_domain_hint` soft warning (the field exists in
+`courses.json` but nothing reads it yet).
 
 ## API Costs
 
