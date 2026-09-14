@@ -3,7 +3,8 @@
  "module": 2,
  "abbrev": "LF",
  "topic": "Logical Fallacies",
- "version": "2027.01-draft-needs-source-review",
+ "version": "2027.01",
+ "draft": true,
  "source_note": "DRAFT. The LFSAI items documented in the Logical Fallacies Master Build Guide (Section 7.2) were not available on disk. These items follow the documented structure (four subscales, items 8 and 15 reverse-scored) and must be replaced with the Master Build Guide items or the live Google Form items before the 2027.01 term.",
  "scale": {
   "points": 7,

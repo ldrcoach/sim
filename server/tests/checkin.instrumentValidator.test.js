@@ -112,6 +112,22 @@ describe('validateInstrument', () => {
     expect(valid).toBe(true);
   });
 
+  test('rejects a negative min_reverse_items', () => {
+    const data = validInstrument({ min_reverse_items: -1, psychometric_note: 'Some note.' });
+    const { valid, errors } = validateInstrument(data);
+    expect(valid).toBe(false);
+    expect(errors.some((e) => e.includes('min_reverse_items') && e.includes('non-negative'))).toBe(true);
+  });
+
+  test('rejects min_reverse_items without a psychometric_note explaining the override', () => {
+    const data = validInstrument({ min_reverse_items: 0 });
+    data.subscales[0].items[4].reverse = false;
+    data.subscales[1].items[2].reverse = false;
+    const { valid, errors } = validateInstrument(data);
+    expect(valid).toBe(false);
+    expect(errors.some((e) => e.includes('psychometric_note'))).toBe(true);
+  });
+
   test('rejects duplicate item ids', () => {
     const data = validInstrument();
     data.subscales[1].items[0].id = 'AL01'; // duplicates subscale 0's first item
