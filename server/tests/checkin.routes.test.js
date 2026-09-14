@@ -232,6 +232,46 @@ describe('POST /api/responses', () => {
     expect(sensing.delta).toBe(0);
   });
 
+  test('handles a debrief subscale with no matching prior baseline (instrument drift)', async () => {
+    // Baseline is missing the "attending" subscale entirely (e.g. an admin reloaded
+    // a changed instrument between this participant's baseline and debrief). The
+    // other three subscales still have a matching baseline entry.
+    mockFindLatestSubscaleScores.mockResolvedValueOnce([
+      { subscale_id: 'sensing', mean: 5, n_items: 5 },
+      { subscale_id: 'processing', mean: 5, n_items: 5 },
+      { subscale_id: 'responding', mean: 5, n_items: 5 },
+    ]);
+    const body = {
+      ...validBaselineBody(),
+      phase: 'debrief',
+      extras: {
+        post_experience: { AL_PX1: 6, AL_PX2: 6, AL_PX3: 6, AL_PX4: 6, AL_PX5: 6 },
+        open_ended: { AL_Q1: 'A'.repeat(40), AL_Q2: 'B'.repeat(40), AL_Q3: 'C'.repeat(40) },
+      },
+    };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(200);
+    expect(res.body.baseline_comparison).toBeDefined();
+    expect(res.body.baseline_comparison).toHaveLength(4);
+
+    const attending = res.body.baseline_comparison.find((c) => c.subscale_id === 'attending');
+    expect(attending.baseline_mean).toBeNull();
+    expect(attending.delta).toBeNull();
+    expect(attending.debrief_mean).not.toBeNull();
+
+    const sensing = res.body.baseline_comparison.find((c) => c.subscale_id === 'sensing');
+    expect(sensing.baseline_mean).not.toBeNull();
+    expect(sensing.delta).not.toBeNull();
+
+    const processing = res.body.baseline_comparison.find((c) => c.subscale_id === 'processing');
+    expect(processing.baseline_mean).not.toBeNull();
+    expect(processing.delta).not.toBeNull();
+
+    const responding = res.body.baseline_comparison.find((c) => c.subscale_id === 'responding');
+    expect(responding.baseline_mean).not.toBeNull();
+    expect(responding.delta).not.toBeNull();
+  });
+
   test('omits baseline_comparison when no baseline exists yet', async () => {
     mockFindLatestSubscaleScores.mockResolvedValueOnce(null);
     const body = {
