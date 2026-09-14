@@ -98,7 +98,7 @@ npm run build
 
 ## Testing
 
-- **Framework:** Jest + supertest (32 tests)
+- **Framework:** Jest + supertest (177 tests)
 - **Run:** `cd server && npm test`
 - **Mocking:** Tests mock the Anthropic API client and `pg` pool. No live services required.
 
