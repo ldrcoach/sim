@@ -371,7 +371,42 @@ function ReviewScreen({ instrument, phase, answeredCounts, onSubmit, onBack, sub
   );
 }
 
-function ConfirmationScreen({ completionText, moduleNum, completionCode }) {
+function ThenAndNowPanel({ comparisons, subscales }) {
+  return (
+    <div style={{ marginTop: 24, textAlign: "left" }}>
+      <h3 style={{ fontSize: 16, color: C.navy, marginBottom: 12 }}>Then and Now</h3>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <thead>
+          <tr style={{ borderBottom: `1px solid ${C.lightGray}` }}>
+            <th style={{ textAlign: "left", padding: "6px 4px" }}>Dimension</th>
+            <th style={{ textAlign: "right", padding: "6px 4px" }}>Baseline</th>
+            <th style={{ textAlign: "right", padding: "6px 4px" }}>Debrief</th>
+            <th style={{ textAlign: "right", padding: "6px 4px" }}>Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          {comparisons.map((c) => {
+            const subscale = subscales.find((s) => s.id === c.subscale_id);
+            return (
+              <tr key={c.subscale_id} style={{ borderBottom: `1px solid ${C.lightGray}` }}>
+                <td style={{ padding: "6px 4px" }}>{subscale ? subscale.name : c.subscale_id}</td>
+                <td style={{ textAlign: "right", padding: "6px 4px" }}>
+                  {c.baseline_mean != null ? c.baseline_mean.toFixed(2) : "--"}
+                </td>
+                <td style={{ textAlign: "right", padding: "6px 4px" }}>{c.debrief_mean.toFixed(2)}</td>
+                <td style={{ textAlign: "right", padding: "6px 4px" }}>
+                  {c.delta != null ? (c.delta > 0 ? `+${c.delta.toFixed(2)}` : c.delta.toFixed(2)) : "--"}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ConfirmationScreen({ completionText, moduleNum, completionCode, baselineComparison, subscales }) {
   const [copyState, setCopyState] = useState("idle"); // idle | copied | failed
   const text = completionText.replace("{module}", moduleNum);
 
@@ -414,6 +449,8 @@ function ConfirmationScreen({ completionText, moduleNum, completionCode }) {
           Couldn't copy automatically. Select the code above and copy it manually.
         </p>
       )}
+
+      {baselineComparison && <ThenAndNowPanel comparisons={baselineComparison} subscales={subscales} />}
     </div>
   );
 }
@@ -597,6 +634,8 @@ export default function CheckIn({ moduleNum, phase }) {
           completionText={instrument.completion}
           moduleNum={moduleNum}
           completionCode={result.completion_code}
+          baselineComparison={result.baseline_comparison}
+          subscales={instrument.subscales}
         />
       )}
     </>
