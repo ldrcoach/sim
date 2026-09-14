@@ -4,6 +4,7 @@
  "abbrev": "EM",
  "topic": "Empathy",
  "version": "2027.01",
+ "psychometric_note": "The Perspective Taking and Empathic Concern subscales adapt items from Davis's Interpersonal Reactivity Index (Davis, 1983), reworded for a professional/leadership context. The Leadership Application of Empathy subscale is original content specific to this course.",
  "scale": {
   "points": 7,
   "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
