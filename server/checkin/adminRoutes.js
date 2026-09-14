@@ -144,6 +144,7 @@ router.delete('/participant', async (req, res) => {
       return res.status(400).json({ error: 'participant_id query parameter is required' });
     }
     const result = await checkinDb.deleteParticipant(participantId);
+    console.log(`[Admin] deleted participant ${participantId}: ${result.responses_deleted} response(s), participant row ${result.participant_deleted ? 'removed' : 'not found'}`);
     res.json(result);
   } catch (err) {
     console.error('[Admin] participant deletion failed:', err.message);
@@ -163,10 +164,20 @@ router.post('/purge-expired', async (req, res) => {
         results.push({ course, purged: 0, threshold: threshold.toISOString(), status: 'not yet due' });
         continue;
       }
-      const ids = await checkinDb.findParticipantIdsWithEmailByCourse(course);
-      const purged = await checkinDb.purgeParticipantEmails(ids);
-      results.push({ course, purged, threshold: threshold.toISOString(), status: 'purged' });
+      try {
+        const ids = await checkinDb.findParticipantIdsWithEmailByCourse(course);
+        const purged = await checkinDb.purgeParticipantEmails(ids);
+        results.push({ course, purged, threshold: threshold.toISOString(), status: 'purged' });
+      } catch (err) {
+        // Per-course isolation: a DB failure purging one course must not abort
+        // the rest of the loop, and must not leak infrastructure details (same
+        // reasoning as the route-level catches below) into a response that a
+        // course-developer-facing caller could see.
+        console.error(`[Admin] purge-expired failed for course ${course}:`, err.message);
+        results.push({ course, purged: 0, threshold: threshold.toISOString(), status: 'error', error: 'Internal error' });
+      }
     }
+    console.log(`[Admin] purge-expired: ${results.map((r) => `${r.course}=${r.status}(${r.purged})`).join(', ')}`);
     res.json({ results });
   } catch (err) {
     console.error('[Admin] purge-expired failed:', err.message);

@@ -225,6 +225,16 @@ describe('admin routes', () => {
       const res = await request(app).delete('/api/admin/participant').set('X-Admin-Token', ADMIN_TOKEN);
       expect(res.status).toBe(400);
     });
+
+    test('returns 500 with a generic error when deletion throws', async () => {
+      mockDeleteParticipant.mockRejectedValueOnce(new Error('connection refused: internal-db-host:5432'));
+      const res = await request(app)
+        .delete('/api/admin/participant?participant_id=p1')
+        .set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: 'Internal error' });
+      expect(JSON.stringify(res.body)).not.toContain('internal-db-host');
+    });
   });
 
   describe('POST /api/admin/purge-expired', () => {
@@ -247,6 +257,27 @@ describe('admin routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.results).toEqual([{ course: 'OBLD500', purged: 0, threshold: expect.any(String), status: 'not yet due' }]);
       expect(mockFindParticipantIdsWithEmailByCourse).not.toHaveBeenCalled();
+    });
+
+    test('isolates a per-course purge failure without aborting other courses', async () => {
+      mockGetAllCourseConfigs.mockReturnValueOnce({
+        OBLD500: { course_end_date: '2020-01-01', retention_days_after_end: 1 }, // past due, will fail
+        OBLD501: { course_end_date: '2020-01-01', retention_days_after_end: 1 }, // past due, will succeed
+      });
+      mockFindParticipantIdsWithEmailByCourse.mockImplementation((course) => {
+        if (course === 'OBLD500') {
+          return Promise.reject(new Error('connection refused: internal-db-host:5432'));
+        }
+        return Promise.resolve(['p1']);
+      });
+      mockPurgeParticipantEmails.mockResolvedValue(1);
+      const res = await request(app).post('/api/admin/purge-expired').set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(200);
+      expect(res.body.results).toEqual([
+        { course: 'OBLD500', purged: 0, threshold: expect.any(String), status: 'error', error: 'Internal error' },
+        { course: 'OBLD501', purged: 1, threshold: expect.any(String), status: 'purged' },
+      ]);
+      expect(JSON.stringify(res.body)).not.toContain('internal-db-host');
     });
   });
 
