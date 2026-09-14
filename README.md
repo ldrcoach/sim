@@ -37,9 +37,9 @@ Container Apps, Consumption plan.
   certificate (auto-renewing).
 - **Secrets:** pulled from Key Vault `ldrc-cortex-kv-dev` -- never set as
   plain env vars. Currently: `ANTHROPIC_API_KEY`, `DATABASE_URL`, and (for
-  the Check-In Module) the check-in HMAC and AES keys
-  (`CHECKIN_HMAC_SECRET`/`CHECKIN_AES_KEY`) plus `CHECKIN_ADMIN_TOKEN`
-  (needed once the admin API is deployed).
+  the Check-In Module) `CHECKIN_HMAC_SECRET`/`CHECKIN_AES_KEY`
+  (`ldrc-sim-checkin-hmac-secret`/`ldrc-sim-checkin-aes-key` in Key Vault)
+  plus `CHECKIN_ADMIN_TOKEN` (needed once the admin API is deployed).
 
 ### Deploying a new build
 
