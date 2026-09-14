@@ -252,6 +252,10 @@ app.get('*', (req, res) => {
     // header intact and preserves the existing [200, 404] contract other
     // tests rely on (see "GET / - static/SPA fallback" in api.test.js).
     if (err && !res.headersSent) {
+      // Express's default handler would have logged this (visible in prod
+      // container logs); replicate that so a real failure here -- e.g. a
+      // broken image missing client/dist -- doesn't fail silently.
+      console.error('[SPA fallback] sendFile failed:', err.message);
       res.status(err.status || 500).end();
     }
   });
