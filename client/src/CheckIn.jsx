@@ -513,7 +513,7 @@ export default function CheckIn({ moduleNum, phase, course }) {
   const loadInstrument = useCallback(async () => {
     setStatus("loading");
     try {
-      const res = await fetch(`/api/instrument/${course}/${moduleNum}/${phase}`);
+      const res = await fetch(`/api/instrument/${encodeURIComponent(course)}/${moduleNum}/${phase}`);
       if (!res.ok) {
         throw new Error(res.status === 404 ? "No check-in found for this module." : `Error ${res.status}`);
       }
