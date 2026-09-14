@@ -261,6 +261,21 @@ app.get('*', (req, res) => {
   });
 });
 
+// Global error handler -- catches anything that reaches here via next(err)
+// or a synchronous throw in a route (e.g. malformed JSON bodies rejected by
+// express.json()). Without this, Express's own default handler takes over
+// and sets its own Content-Security-Policy: default-src 'none' header,
+// silently overwriting the frame-ancestors policy set above on every such
+// response -- the same clobbering problem the SPA-fallback callback above
+// fixes for one specific route, generalized here for every other route.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[Unhandled error]', err.message);
+  if (res.headersSent) return;
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.instructure.com");
+  res.status(err.status || 500).json({ error: 'Internal server error' });
+});
+
 // Only start listening when run directly (not when imported by tests)
 if (require.main === module) {
   let loadedInstruments = null;

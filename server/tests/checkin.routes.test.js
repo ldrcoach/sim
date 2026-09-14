@@ -437,4 +437,18 @@ describe('Content-Security-Policy header', () => {
     const res = await request(app).get('/');
     expect(res.headers['content-security-policy']).toBe("frame-ancestors 'self' https://*.instructure.com");
   });
+
+  test('survives a malformed-JSON error response too, not just success responses', async () => {
+    // Without a global error handler, a body express.json() can't parse
+    // reaches Express's own default handler, which sets its own
+    // Content-Security-Policy: default-src 'none' -- silently overwriting
+    // the frame-ancestors policy. This proves that no longer happens.
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/chat')
+      .set('Content-Type', 'application/json')
+      .send('{ this is not valid json');
+    expect(res.status).toBe(400);
+    expect(res.headers['content-security-policy']).toBe("frame-ancestors 'self' https://*.instructure.com");
+  });
 });
