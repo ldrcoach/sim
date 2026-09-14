@@ -99,14 +99,18 @@ npm run build
 
 ## Testing
 
-- **Framework:** Jest + supertest (194 tests)
+- **Framework:** Jest + supertest (195 tests)
 - **Run:** `cd server && npm test`
 - **Mocking:** Tests mock the Anthropic API client and `pg` pool. No live services required.
 
 ## CI/CD
 
 - **GitHub Actions:**
-  - `.github/workflows/ci.yml` runs the server Jest tests on push/PR to `main`.
+  - `.github/workflows/ci.yml` runs two jobs on push/PR to `main`: the server
+    Jest tests, and a `client-build` job that runs `npm ci && npm run build`
+    in `client/` -- added so a broken client build or dependency is caught
+    before merge instead of only by manual verification (this gap is what let
+    the Vite 6 migration's client-side risk go uncovered by CI).
   - `.github/workflows/purge-expired.yml` calls the Check-In Module's
     retention purge daily via cron (also supports manual `workflow_dispatch`
     runs) -- see the Check-In Module section above.
