@@ -17,6 +17,17 @@ const PORT = process.env.PORT || 3000;
 // client IP instead of the proxy's.
 app.set('trust proxy', 1);
 
+// Allow Canvas (ICDF) to embed the check-in flow in an iframe if a course
+// chooses to; default delivery is still a link that opens in a new tab. This
+// is a single, global policy -- courses.json's per-course allow_embed field
+// is consulted by the ICDF/Canvas launch-panel side, not by this header,
+// since the server can't know which course a request is "for" until the
+// client-side bundle parses the URL.
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.instructure.com");
+  next();
+});
+
 app.use('/api/admin', adminRoutes);
 app.use('/api', checkinRoutes);
 
@@ -231,7 +242,19 @@ app.get('/privacy', (req, res) => {
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'), (err) => {
+    // client/dist doesn't exist in dev/test (it's only produced by `npm run
+    // build`, or by the Docker image's client build stage in prod). Without
+    // this callback, a missing file makes sendFile hand the ENOENT to
+    // Express's default error handler, which sets its own
+    // Content-Security-Policy header -- silently clobbering the
+    // frame-ancestors policy set above. Responding here instead keeps that
+    // header intact and preserves the existing [200, 404] contract other
+    // tests rely on (see "GET / - static/SPA fallback" in api.test.js).
+    if (err && !res.headersSent) {
+      res.status(err.status || 500).end();
+    }
+  });
 });
 
 // Only start listening when run directly (not when imported by tests)

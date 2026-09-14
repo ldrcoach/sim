@@ -430,3 +430,11 @@ describe('Task 9 regression: check-in router does not affect other /api routes',
     }
   });
 });
+
+describe('Content-Security-Policy header', () => {
+  test('sets frame-ancestors to allow Canvas embedding, on every response', async () => {
+    const app = createApp();
+    const res = await request(app).get('/');
+    expect(res.headers['content-security-policy']).toBe("frame-ancestors 'self' https://*.instructure.com");
+  });
+});
