@@ -98,7 +98,7 @@ npm run build
 
 ## Testing
 
-- **Framework:** Jest + supertest (178 tests)
+- **Framework:** Jest + supertest (194 tests)
 - **Run:** `cd server && npm test`
 - **Mocking:** Tests mock the Anthropic API client and `pg` pool. No live services required.
 
@@ -135,10 +135,9 @@ session persistence (see above) -- not a separate database, and not SQLite
 
 **Instruments:** one JSON file per module under `server/checkin/instruments/`,
 validated at server boot (a bad file logs loudly but the app keeps running --
-only check-in's own routes degrade, not the whole app). Only `AL.json`
-(Module 4, Active Listening) exists today, as a development fixture --
-migrating the real 18 Google Forms into the remaining 9 module files is a
-separate, not-yet-started task.
+only check-in's own routes degrade, not the whole app). All 9 OBLD 500
+modules (`SR`, `LF`, `CT`, `AL`, `EM`, `LC`, `MN`, `CS`, `SL`) have real
+content, migrated from the original 18 Google Forms.
 
 **Endpoints:**
 - `GET /api/instrument/:course/:module/:phase` -- public instrument view (no reverse-scoring flags)
@@ -157,15 +156,41 @@ the Debrief confirmation screen.
 - `GET /api/admin/export?course=&format=json|csv&shape=long|paired` -- long: one row per item; paired: one row per participant per module per subscale, with baseline/debrief means and deltas
 - `POST /api/admin/instruments/reload` -- re-read the instrument directory without redeploying
 - `DELETE /api/admin/participant?participant_id=` -- full erasure (responses and identity) for a right-to-erasure request
-- `POST /api/admin/purge-expired` -- the automatic retention job's actual logic; not scheduled by this repo, call it periodically from wherever you want the schedule to live (idempotent, safe to call repeatedly)
+- `POST /api/admin/purge-expired` -- the automatic retention job's actual logic (idempotent, safe to call repeatedly); scheduled daily by `.github/workflows/purge-expired.yml` (see below)
 
-**Still not built:** `key`/`none` identity modes (only `email` is
-implemented; `courses.json` can declare a different mode but the server
-rejects it with 501 until that mode actually exists), the real 18-Google-
-Forms-to-9-instrument-files migration (`AL.json` is still the only, still
-fixture, instrument), CSP `frame-ancestors` for Canvas iframe embedding,
-and the client-side `email_domain_hint` soft warning (the field exists in
-`courses.json` but nothing reads it yet).
+**Identity modes:** all three from the spec are implemented -- `email`
+(ERAU email, encrypted at rest, used for Baseline/Debrief pairing and the
+retention purge), `key` (a learner-chosen memorable phrase, 3-100
+characters, no email stored, pairing depends on the learner remembering
+their own phrase), and `none` (no identity field at all, no pairing
+possible, response counts only). A course's `identity_mode` (in
+`courses.json`) determines which one a learner sees on the intro screen.
+
+**Multi-course:** the URL scheme is now `?week={N}&mode=baseline&course={CODE}`
+-- `course` defaults to `OBLD500` when omitted, so every existing Canvas
+link keeps working unchanged. Any course with an entry in `courses.json`
+and matching instrument files under `server/checkin/instruments/` (keyed
+by `course` + `module` inside each file, not by filename) can be reached
+this way.
+
+**CSP:** `frame-ancestors 'self' https://*.instructure.com` is set on
+every response, so Canvas can iframe-embed the check-in flow if a course
+chooses to; the default delivery is still a link that opens in a new tab.
+`courses.json`'s `allow_embed` field is for the ICDF/Canvas launch-panel
+side to consult when deciding whether to actually embed a given course --
+Sim's own CSP header doesn't vary per course.
+
+**Retention purge scheduling:** `.github/workflows/purge-expired.yml` calls
+`POST /api/admin/purge-expired` daily via cron (and supports manual
+`workflow_dispatch` runs). Needs a `CHECKIN_ADMIN_TOKEN` GitHub Actions
+repository secret matching the token already deployed to `sim-prod`.
+
+**Still not built:** the real 18-Google-Forms-to-9-instrument-files
+migration is done (all 9 OBLD 500 modules have real content as of
+2026-09-14); nothing else from the original spec remains outstanding for
+Sim's side. The ICDF engine's own Baseline/Debrief pages still embed
+Google Forms directly and need their launch-panel changed to link to Sim
+instead -- that's ICDF-repo work, not Sim's.
 
 ## API Costs
 
