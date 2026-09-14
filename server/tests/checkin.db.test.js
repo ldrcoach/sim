@@ -112,3 +112,153 @@ describe('recordInstrumentVersion', () => {
     expect(mockQuery.mock.calls[0][1][3]).toBe('dev-fixture-v1');
   });
 });
+
+describe('findParticipantIdsWithEmailByCourse', () => {
+  test('returns distinct participant ids that still have an encrypted email on file', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [{ participant_id: 'p1' }, { participant_id: 'p2' }] });
+    const ids = await checkinDb.findParticipantIdsWithEmailByCourse('OBLD500');
+    expect(ids).toEqual(['p1', 'p2']);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('email_encrypted IS NOT NULL'), ['OBLD500']);
+  });
+
+  test('returns an empty array when nobody matches', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    const ids = await checkinDb.findParticipantIdsWithEmailByCourse('OBLD500');
+    expect(ids).toEqual([]);
+  });
+});
+
+describe('purgeParticipantEmails', () => {
+  test('nulls email_encrypted for the given participant ids', async () => {
+    mockQuery.mockResolvedValueOnce({ rowCount: 2 });
+    const count = await checkinDb.purgeParticipantEmails(['p1', 'p2']);
+    expect(count).toBe(2);
+    expect(mockQuery).toHaveBeenCalledWith(
+      expect.stringContaining('SET email_encrypted = NULL'),
+      [['p1', 'p2']]
+    );
+  });
+
+  test('returns 0 and does not query when the id list is empty', async () => {
+    const count = await checkinDb.purgeParticipantEmails([]);
+    expect(count).toBe(0);
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+});
+
+describe('findDistinctCoursesWithParticipantData', () => {
+  test('returns the distinct list of courses that have submitted responses', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [{ course: 'OBLD500' }, { course: 'PSYC301' }] });
+    const result = await checkinDb.findDistinctCoursesWithParticipantData();
+    expect(result).toEqual(['OBLD500', 'PSYC301']);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('SELECT DISTINCT course FROM checkin_responses'));
+  });
+
+  test('returns an empty array when there is no data', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    const result = await checkinDb.findDistinctCoursesWithParticipantData();
+    expect(result).toEqual([]);
+  });
+});
+
+describe('findResponseByCompletionCode', () => {
+  test('returns the matching response row', async () => {
+    mockQuery.mockResolvedValueOnce({
+      rows: [{ course: 'OBLD500', module: 4, phase: 'baseline', submitted_at: '2027-01-15T00:00:00Z' }],
+    });
+    const match = await checkinDb.findResponseByCompletionCode('AL4-B-K7Q2M9PX');
+    expect(match).toEqual({ course: 'OBLD500', module: 4, phase: 'baseline', submitted_at: '2027-01-15T00:00:00Z' });
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('WHERE completion_code = $1'), ['AL4-B-K7Q2M9PX']);
+  });
+
+  test('returns null when no response matches', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    const match = await checkinDb.findResponseByCompletionCode('NOT-A-REAL-CODE');
+    expect(match).toBeNull();
+  });
+});
+
+describe('getSummary', () => {
+  test('returns per module/phase counts', async () => {
+    const rows = [
+      { module: 4, phase: 'baseline', total: 10, straightline_count: 1, last_submission: '2027-01-20T00:00:00Z' },
+      { module: 4, phase: 'debrief', total: 8, straightline_count: 0, last_submission: '2027-03-01T00:00:00Z' },
+    ];
+    mockQuery.mockResolvedValueOnce({ rows });
+    const summary = await checkinDb.getSummary('OBLD500');
+    expect(summary).toEqual(rows);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('GROUP BY module, phase'), ['OBLD500']);
+  });
+});
+
+describe('getExportLongRows', () => {
+  test('returns one row per response item, joined with response metadata', async () => {
+    const rows = [
+      { response_id: 1, course: 'OBLD500', module: 4, phase: 'baseline', participant_id: 'p1', item_id: 'AL01', raw_value: 5, scored_value: 5 },
+    ];
+    mockQuery.mockResolvedValueOnce({ rows });
+    const result = await checkinDb.getExportLongRows('OBLD500');
+    expect(result).toEqual(rows);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('JOIN checkin_response_items'), ['OBLD500']);
+  });
+});
+
+describe('getExportPairedRows', () => {
+  test('returns raw participant/module/subscale/phase/mean rows for pivoting', async () => {
+    const rows = [
+      { participant_id: 'p1', module: 4, phase: 'baseline', subscale_id: 'sensing', mean: '5.00' },
+      { participant_id: 'p1', module: 4, phase: 'debrief', subscale_id: 'sensing', mean: '6.00' },
+    ];
+    mockQuery.mockResolvedValueOnce({ rows });
+    const result = await checkinDb.getExportPairedRows('OBLD500');
+    expect(result).toEqual(rows);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('JOIN checkin_subscale_scores'), ['OBLD500']);
+  });
+
+  test('restricts each participant/module/phase to its single most recent response', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    await checkinDb.getExportPairedRows('OBLD500');
+    const sql = mockQuery.mock.calls[0][0];
+    // Correlated subquery must tie the "most recent" lookup back to the outer
+    // row on participant/module/phase (not just course), using the same
+    // submitted_at/id tie-break as findLatestResponseId.
+    expect(sql).toContain('cr2.participant_id = cr.participant_id');
+    expect(sql).toContain('cr2.module = cr.module');
+    expect(sql).toContain('cr2.phase = cr.phase');
+    expect(sql).toContain('ORDER BY submitted_at DESC, id DESC LIMIT 1');
+  });
+});
+
+describe('deleteParticipant', () => {
+  test('deletes responses before the participant row, in that order', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rowCount: 3 }) // responses deleted
+      .mockResolvedValueOnce({ rowCount: 1 }); // participant deleted
+    const result = await checkinDb.deleteParticipant('p1');
+    expect(result).toEqual({ responses_deleted: 3, participant_deleted: true });
+    expect(mockQuery.mock.calls[0][0]).toContain('DELETE FROM checkin_responses');
+    expect(mockQuery.mock.calls[1][0]).toContain('DELETE FROM checkin_participants');
+  });
+
+  test('participant_deleted is false when no participant row existed', async () => {
+    mockQuery.mockResolvedValueOnce({ rowCount: 0 }).mockResolvedValueOnce({ rowCount: 0 });
+    const result = await checkinDb.deleteParticipant('nonexistent');
+    expect(result.participant_deleted).toBe(false);
+  });
+});
+
+describe('findLatestSubscaleScores', () => {
+  test('returns the subscale scores for the most recent matching response', async () => {
+    const rows = [{ subscale_id: 'sensing', mean: '5.80', n_items: 5 }];
+    mockQuery.mockResolvedValueOnce({ rows });
+    const scores = await checkinDb.findLatestSubscaleScores('p1', 'OBLD500', 4, 'baseline');
+    expect(scores).toEqual([{ subscale_id: 'sensing', mean: 5.8, n_items: 5 }]);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('ORDER BY submitted_at DESC, id DESC LIMIT 1'), ['p1', 'OBLD500', 4, 'baseline']);
+  });
+
+  test('returns null when there is no matching response', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    const scores = await checkinDb.findLatestSubscaleScores('p1', 'OBLD500', 4, 'baseline');
+    expect(scores).toBeNull();
+  });
+});

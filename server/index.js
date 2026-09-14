@@ -4,8 +4,10 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { getPool, isAvailable, initSchema } = require('./db');
 const checkinRoutes = require('./checkin/routes');
+const adminRoutes = require('./checkin/adminRoutes');
 const instrumentLoader = require('./checkin/instrumentLoader');
 const checkinDb = require('./checkin/db');
+const courses = require('./checkin/courses');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +17,7 @@ const PORT = process.env.PORT || 3000;
 // client IP instead of the proxy's.
 app.set('trust proxy', 1);
 
+app.use('/api/admin', adminRoutes);
 app.use('/api', checkinRoutes);
 
 app.use(express.json({ limit: '1mb' }));
@@ -245,6 +248,13 @@ if (require.main === module) {
     // ensureLoaded() retry inside the route handler, so it degrades to a
     // per-request error rather than crashing the process.
     console.error('[CheckIn] Instrument validation failed at boot -- check-in endpoints will error until this is fixed and redeployed:', err.message);
+  }
+
+  try {
+    courses.load();
+    console.log('[CheckIn] Course config loaded and validated');
+  } catch (err) {
+    console.error('[CheckIn] Course config validation failed at boot -- check-in endpoints will error until this is fixed and redeployed:', err.message);
   }
 
   Promise.all([initSchema(), checkinDb.initCheckinSchema()])

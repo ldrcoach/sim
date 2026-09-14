@@ -1,0 +1,10 @@
+{
+  "OBLD500": {
+    "course_code": "OBLD500-2027-01",
+    "identity_mode": "email",
+    "email_domain_hint": "erau.edu",
+    "course_end_date": "2027-03-14",
+    "retention_days_after_end": 90,
+    "allow_embed": true
+  }
+}

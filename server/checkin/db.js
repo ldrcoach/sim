@@ -146,6 +146,120 @@ async function recordInstrumentVersion(course, moduleNum, phase, version, json) 
   return true;
 }
 
+async function findParticipantIdsWithEmailByCourse(course) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT DISTINCT cp.participant_id
+     FROM checkin_participants cp
+     JOIN checkin_responses cr ON cr.participant_id = cp.participant_id
+     WHERE cr.course = $1 AND cp.email_encrypted IS NOT NULL`,
+    [course]
+  );
+  return result.rows.map((r) => r.participant_id);
+}
+
+async function purgeParticipantEmails(participantIds) {
+  if (participantIds.length === 0) return 0;
+  const p = getPool();
+  const result = await p.query(
+    `UPDATE checkin_participants SET email_encrypted = NULL WHERE participant_id = ANY($1::varchar[])`,
+    [participantIds]
+  );
+  return result.rowCount;
+}
+
+async function findDistinctCoursesWithParticipantData() {
+  const p = getPool();
+  const result = await p.query(`SELECT DISTINCT course FROM checkin_responses`);
+  return result.rows.map((r) => r.course);
+}
+
+async function findResponseByCompletionCode(code) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT course, module, phase, submitted_at FROM checkin_responses WHERE completion_code = $1`,
+    [code]
+  );
+  return result.rows.length ? result.rows[0] : null;
+}
+
+async function getSummary(course) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT module, phase, count(*)::int AS total,
+            count(*) FILTER (WHERE straightline_flag)::int AS straightline_count,
+            max(submitted_at) AS last_submission
+     FROM checkin_responses
+     WHERE course = $1
+     GROUP BY module, phase
+     ORDER BY module, phase`,
+    [course]
+  );
+  return result.rows;
+}
+
+async function getExportLongRows(course) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT cr.id AS response_id, cr.course, cr.module, cr.phase, cr.participant_id,
+            cr.instrument_version, cr.started_at, cr.submitted_at, cr.straightline_flag,
+            cr.completion_code, cri.item_id, cri.raw_value, cri.scored_value
+     FROM checkin_responses cr
+     JOIN checkin_response_items cri ON cri.response_id = cr.id
+     WHERE cr.course = $1
+     ORDER BY cr.id, cri.item_id`,
+    [course]
+  );
+  return result.rows;
+}
+
+async function getExportPairedRows(course) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT cr.participant_id, cr.module, cr.phase, css.subscale_id, css.mean
+     FROM checkin_responses cr
+     JOIN checkin_subscale_scores css ON css.response_id = cr.id
+     WHERE cr.course = $1
+       AND cr.id = (
+         SELECT id FROM checkin_responses cr2
+         WHERE cr2.participant_id = cr.participant_id AND cr2.course = cr.course
+           AND cr2.module = cr.module AND cr2.phase = cr.phase
+         ORDER BY submitted_at DESC, id DESC LIMIT 1
+       )
+     ORDER BY cr.participant_id, cr.module, css.subscale_id, cr.phase`,
+    [course]
+  );
+  return result.rows;
+}
+
+async function deleteParticipant(participantId) {
+  const p = getPool();
+  // Delete responses first: checkin_responses.participant_id has no ON DELETE
+  // CASCADE from checkin_participants (only the reverse -- response_items and
+  // subscale_scores cascade FROM checkin_responses). Deleting the participant
+  // row first would hit a foreign key violation if any responses still exist.
+  const responsesResult = await p.query(`DELETE FROM checkin_responses WHERE participant_id = $1`, [participantId]);
+  const participantResult = await p.query(`DELETE FROM checkin_participants WHERE participant_id = $1`, [participantId]);
+  return { responses_deleted: responsesResult.rowCount, participant_deleted: participantResult.rowCount > 0 };
+}
+
+async function findLatestSubscaleScores(participantId, course, moduleNum, phase) {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT css.subscale_id, css.mean, css.n_items
+     FROM checkin_subscale_scores css
+     WHERE css.response_id = (
+       SELECT id FROM checkin_responses
+       WHERE participant_id = $1 AND course = $2 AND module = $3 AND phase = $4
+       ORDER BY submitted_at DESC, id DESC LIMIT 1
+     )`,
+    [participantId, course, moduleNum, phase]
+  );
+  return result.rows.length
+    ? result.rows.map((r) => ({ subscale_id: r.subscale_id, mean: Number(r.mean), n_items: r.n_items }))
+    : null;
+}
+
 module.exports = {
   isAvailable,
   initCheckinSchema,
@@ -153,4 +267,13 @@ module.exports = {
   findLatestResponseId,
   insertResponse,
   recordInstrumentVersion,
+  findParticipantIdsWithEmailByCourse,
+  purgeParticipantEmails,
+  findDistinctCoursesWithParticipantData,
+  findResponseByCompletionCode,
+  getSummary,
+  getExportLongRows,
+  getExportPairedRows,
+  deleteParticipant,
+  findLatestSubscaleScores,
 };

@@ -4,6 +4,7 @@ let mockAvailable = true;
 const mockUpsertParticipant = jest.fn().mockResolvedValue(undefined);
 const mockFindLatestResponseId = jest.fn().mockResolvedValue(null);
 const mockInsertResponse = jest.fn().mockResolvedValue({ id: 1, submitted_at: '2027-01-15T00:00:00Z' });
+const mockFindLatestSubscaleScores = jest.fn().mockResolvedValue(null);
 
 jest.mock('../checkin/db', () => ({
   isAvailable: () => mockAvailable,
@@ -12,7 +13,17 @@ jest.mock('../checkin/db', () => ({
   insertResponse: (...args) => mockInsertResponse(...args),
   recordInstrumentVersion: jest.fn().mockResolvedValue(true),
   initCheckinSchema: jest.fn().mockResolvedValue(true),
+  findLatestSubscaleScores: (...args) => mockFindLatestSubscaleScores(...args),
 }));
+
+let mockCourseConfig = { identity_mode: 'email' };
+jest.mock('../checkin/courses', () => ({
+  getCourseConfig: (...args) => mockGetCourseConfig(...args),
+  load: jest.fn(),
+  ensureLoaded: jest.fn(),
+  getAllCourseConfigs: jest.fn().mockReturnValue({}),
+}));
+const mockGetCourseConfig = jest.fn((course) => (course === 'OBLD500' ? mockCourseConfig : null));
 
 // Mock the sim_sessions db module too, since index.js requires it unconditionally.
 jest.mock('../db', () => ({
@@ -82,6 +93,9 @@ describe('POST /api/responses', () => {
     mockUpsertParticipant.mockClear();
     mockFindLatestResponseId.mockClear().mockResolvedValue(null);
     mockInsertResponse.mockClear().mockResolvedValue({ id: 1, submitted_at: '2027-01-15T00:00:00Z' });
+    mockFindLatestSubscaleScores.mockClear().mockResolvedValue(null);
+    mockCourseConfig = { identity_mode: 'email' };
+    mockGetCourseConfig.mockClear();
   });
 
   test('accepts a valid baseline submission and returns a completion code', async () => {
@@ -134,6 +148,19 @@ describe('POST /api/responses', () => {
     expect(res.status).toBe(404);
   });
 
+  test('accepts a course with no courses.json entry, defaulting to email mode', async () => {
+    mockGetCourseConfig.mockReturnValueOnce(null); // unknown course, no config entry
+    const res = await request(app).post('/api/responses').send(validBaselineBody());
+    expect(res.status).toBe(200);
+  });
+
+  test('returns 501 when the configured identity_mode is not "email"', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const res = await request(app).post('/api/responses').send(validBaselineBody());
+    expect(res.status).toBe(501);
+    expect(mockInsertResponse).not.toHaveBeenCalled();
+  });
+
   test('requires extras for a debrief submission', async () => {
     const body = { ...validBaselineBody(), phase: 'debrief' };
     const res = await request(app).post('/api/responses').send(body);
@@ -174,6 +201,95 @@ describe('POST /api/responses', () => {
     mockFindLatestResponseId.mockResolvedValueOnce(17);
     await request(app).post('/api/responses').send(validBaselineBody());
     expect(mockInsertResponse.mock.calls[0][0].supersedes).toBe(17);
+  });
+
+  test('includes baseline_comparison in a debrief response when a baseline exists', async () => {
+    mockFindLatestSubscaleScores.mockResolvedValueOnce([
+      { subscale_id: 'sensing', mean: 5, n_items: 5 },
+      { subscale_id: 'attending', mean: 4, n_items: 5 },
+      { subscale_id: 'processing', mean: 5, n_items: 5 },
+      { subscale_id: 'responding', mean: 5, n_items: 5 },
+    ]);
+    const body = {
+      ...validBaselineBody(),
+      phase: 'debrief',
+      extras: {
+        post_experience: { AL_PX1: 6, AL_PX2: 6, AL_PX3: 6, AL_PX4: 6, AL_PX5: 6 },
+        open_ended: { AL_Q1: 'A'.repeat(40), AL_Q2: 'B'.repeat(40), AL_Q3: 'C'.repeat(40) },
+      },
+    };
+    // AL05 is the sensing subscale's reverse-scored item (see instruments/AL.json),
+    // so raw 3 -> scored 5, keeping the whole sensing subscale at a scored mean of 5
+    // to match the mocked baseline mean and produce an exact zero delta below.
+    body.answers = { ...body.answers, AL05: 3 };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(200);
+    expect(res.body.baseline_comparison).toBeDefined();
+    expect(res.body.baseline_comparison).toHaveLength(4);
+    const sensing = res.body.baseline_comparison.find((c) => c.subscale_id === 'sensing');
+    expect(sensing.baseline_mean).toBe(5);
+    expect(sensing.debrief_mean).toBe(5);
+    expect(sensing.delta).toBe(0);
+  });
+
+  test('handles a debrief subscale with no matching prior baseline (instrument drift)', async () => {
+    // Baseline is missing the "attending" subscale entirely (e.g. an admin reloaded
+    // a changed instrument between this participant's baseline and debrief). The
+    // other three subscales still have a matching baseline entry.
+    mockFindLatestSubscaleScores.mockResolvedValueOnce([
+      { subscale_id: 'sensing', mean: 5, n_items: 5 },
+      { subscale_id: 'processing', mean: 5, n_items: 5 },
+      { subscale_id: 'responding', mean: 5, n_items: 5 },
+    ]);
+    const body = {
+      ...validBaselineBody(),
+      phase: 'debrief',
+      extras: {
+        post_experience: { AL_PX1: 6, AL_PX2: 6, AL_PX3: 6, AL_PX4: 6, AL_PX5: 6 },
+        open_ended: { AL_Q1: 'A'.repeat(40), AL_Q2: 'B'.repeat(40), AL_Q3: 'C'.repeat(40) },
+      },
+    };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(200);
+    expect(res.body.baseline_comparison).toBeDefined();
+    expect(res.body.baseline_comparison).toHaveLength(4);
+
+    const attending = res.body.baseline_comparison.find((c) => c.subscale_id === 'attending');
+    expect(attending.baseline_mean).toBeNull();
+    expect(attending.delta).toBeNull();
+    expect(attending.debrief_mean).not.toBeNull();
+
+    const sensing = res.body.baseline_comparison.find((c) => c.subscale_id === 'sensing');
+    expect(sensing.baseline_mean).not.toBeNull();
+    expect(sensing.delta).not.toBeNull();
+
+    const processing = res.body.baseline_comparison.find((c) => c.subscale_id === 'processing');
+    expect(processing.baseline_mean).not.toBeNull();
+    expect(processing.delta).not.toBeNull();
+
+    const responding = res.body.baseline_comparison.find((c) => c.subscale_id === 'responding');
+    expect(responding.baseline_mean).not.toBeNull();
+    expect(responding.delta).not.toBeNull();
+  });
+
+  test('omits baseline_comparison when no baseline exists yet', async () => {
+    mockFindLatestSubscaleScores.mockResolvedValueOnce(null);
+    const body = {
+      ...validBaselineBody(),
+      phase: 'debrief',
+      extras: {
+        post_experience: { AL_PX1: 6, AL_PX2: 6, AL_PX3: 6, AL_PX4: 6, AL_PX5: 6 },
+        open_ended: { AL_Q1: 'A'.repeat(40), AL_Q2: 'B'.repeat(40), AL_Q3: 'C'.repeat(40) },
+      },
+    };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(200);
+    expect(res.body.baseline_comparison).toBeUndefined();
+  });
+
+  test('does not look up a baseline comparison for a baseline submission itself', async () => {
+    await request(app).post('/api/responses').send(validBaselineBody());
+    expect(mockFindLatestSubscaleScores).not.toHaveBeenCalled();
   });
 
   test('returns 503 when the database is not configured', async () => {
