@@ -51,6 +51,11 @@ router.get('/instrument/:course/:module/:phase', checkinLimiter, (req, res) => {
   if (!view) {
     return res.status(404).json({ error: 'Instrument not found' });
   }
+
+  const courseConfig = courses.getCourseConfig(course);
+  view.identity_mode = courseConfig ? courseConfig.identity_mode : 'email';
+  view.email_domain_hint = courseConfig ? courseConfig.email_domain_hint : null;
+
   res.json(view);
 });
 

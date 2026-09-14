@@ -57,7 +57,11 @@ const validBaselineBody = () => ({
 
 describe('GET /api/instrument/:course/:module/:phase', () => {
   let app;
-  beforeEach(() => { app = createApp(); });
+  beforeEach(() => {
+    app = createApp();
+    mockCourseConfig = { identity_mode: 'email', email_domain_hint: 'erau.edu' };
+    mockGetCourseConfig.mockClear();
+  });
 
   test('returns the public baseline view without reverse flags', async () => {
     const res = await request(app).get('/api/instrument/OBLD500/4/baseline');
@@ -81,6 +85,21 @@ describe('GET /api/instrument/:course/:module/:phase', () => {
   test('returns 404 for an unknown module', async () => {
     const res = await request(app).get('/api/instrument/OBLD500/99/baseline');
     expect(res.status).toBe(404);
+  });
+
+  test('includes identity_mode and email_domain_hint from courses.json', async () => {
+    const res = await request(app).get('/api/instrument/OBLD500/4/baseline');
+    expect(res.status).toBe(200);
+    expect(res.body.identity_mode).toBe('email');
+    expect(res.body.email_domain_hint).toBe('erau.edu');
+  });
+
+  test('defaults identity_mode to "email" and email_domain_hint to null for an unconfigured course', async () => {
+    mockGetCourseConfig.mockReturnValueOnce(null);
+    const res = await request(app).get('/api/instrument/OBLD500/4/baseline');
+    expect(res.status).toBe(200);
+    expect(res.body.identity_mode).toBe('email');
+    expect(res.body.email_domain_hint).toBeNull();
   });
 });
 
