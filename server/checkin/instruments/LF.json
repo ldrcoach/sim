@@ -4,63 +4,63 @@
  "abbrev": "LF",
  "topic": "Logical Fallacies",
  "version": "2027.01",
- "draft": true,
- "source_note": "DRAFT. The LFSAI items documented in the Logical Fallacies Master Build Guide (Section 7.2) were not available on disk. These items follow the documented structure (four subscales, items 8 and 15 reverse-scored) and must be replaced with the Master Build Guide items or the live Google Form items before the 2027.01 term.",
+ "min_reverse_items": 0,
+ "psychometric_note": "Sourced 2026-09-14 from the live Google Forms (Baseline and Debrief) for the Logical Fallacies Training Plan -- the same forms this check-in module replaces. The pathway documentation (Logical_Fallacies_Pathway_Integrated_v1.md) describes this instrument's Section 7.2 items as having items 8 and 15 reverse-scored, but the actual live forms' item text for both is positively worded, matching every other item in the instrument -- no reverse-scored items exist in the instrument as actually deployed. Two post-experience items (originally referencing a 'video analysis exercise' and a 'scenario response exercise') were reworded to describe this module's actual AI Observation + AI Simulation activities, matching the wording convention used across every other module's post-experience items; nothing else was changed from the live forms' text.",
  "scale": {
   "points": 7,
   "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
  },
  "intro": {
-  "baseline": "This questionnaire measures how you currently recognize, evaluate, and construct arguments in professional settings. Respond based on what you actually do now, not what you think you should do. There are no right or wrong answers.",
+  "baseline": "This questionnaire measures your current ability to recognize, analyze, and respond to logical fallacies in organizational and leadership contexts. Respond based on what you actually do now, not what you think you should do. There are no right or wrong answers.",
   "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
  },
  "subscales": [
   {
-   "id": "fallacy_awareness",
-   "name": "Fallacy Awareness",
-   "help": "Recognizing why reasoning goes wrong and when you are most vulnerable.",
+   "id": "fallacy_recognition",
+   "name": "Fallacy Recognition",
+   "help": "These items assess your ability to identify flawed reasoning.",
    "items": [
-    {"id": "LF01", "text": "I can explain why even experienced leaders are prone to errors in reasoning.", "reverse": false},
-    {"id": "LF02", "text": "I recognize when a decision is being driven by fast, intuitive judgment rather than deliberate analysis.", "reverse": false},
-    {"id": "LF03", "text": "I can name common logical fallacies when I encounter them in workplace communication.", "reverse": false},
-    {"id": "LF04", "text": "I am aware of the situations in which I am most vulnerable to flawed reasoning.", "reverse": false},
-    {"id": "LF05", "text": "I notice when a persuasive message relies on how it makes people feel rather than on its logic.", "reverse": false}
+    {"id": "LF01", "text": "I can recognize when someone uses a personal attack instead of addressing an argument.", "reverse": false},
+    {"id": "LF02", "text": "I can identify when an argument presents only two options when more exist.", "reverse": false},
+    {"id": "LF03", "text": "I notice when someone appeals to emotion rather than evidence to make a point.", "reverse": false},
+    {"id": "LF04", "text": "I can spot when a person misrepresents another's position to make it easier to attack.", "reverse": false},
+    {"id": "LF05", "text": "I recognize when someone draws a broad conclusion from insufficient evidence.", "reverse": false}
    ]
   },
   {
-   "id": "relevance_evaluation",
-   "name": "Relevance Evaluation",
-   "help": "Judging whether the reasons offered actually bear on the claim.",
+   "id": "argument_analysis",
+   "name": "Argument Analysis",
+   "help": "These items assess your ability to evaluate the structure and quality of arguments.",
    "items": [
-    {"id": "LF06", "text": "I can distinguish an argument that attacks a person from one that addresses the person's position.", "reverse": false},
-    {"id": "LF07", "text": "I recognize appeals to authority, popularity, or emotion that substitute for evidence.", "reverse": false},
-    {"id": "LF08", "text": "If a respected leader supports a proposal, I am usually confident the reasoning behind it is sound.", "reverse": true},
-    {"id": "LF09", "text": "I check whether the evidence offered for a claim is actually related to the claim.", "reverse": false},
-    {"id": "LF10", "text": "I can identify when a discussion has been redirected to an issue that is not the one at hand.", "reverse": false}
+    {"id": "LF06", "text": "I can distinguish between a claim supported by evidence and one supported only by opinion.", "reverse": false},
+    {"id": "LF07", "text": "I evaluate whether conclusions logically follow from the premises presented.", "reverse": false},
+    {"id": "LF08", "text": "I consider alternative explanations before accepting a causal claim.", "reverse": false},
+    {"id": "LF09", "text": "I can identify the unstated assumptions underlying an argument.", "reverse": false},
+    {"id": "LF10", "text": "I assess whether evidence cited in an argument is relevant to the conclusion being drawn.", "reverse": false}
    ]
   },
   {
-   "id": "presumption_detection",
-   "name": "Presumption Detection",
-   "help": "Surfacing the hidden assumptions built into how a case is framed.",
+   "id": "counter_argument_construction",
+   "name": "Counter-Argument Construction",
+   "help": "These items assess your ability to respond constructively to flawed reasoning.",
    "items": [
-    {"id": "LF11", "text": "I question the assumptions built into how a problem is framed before evaluating the options.", "reverse": false},
-    {"id": "LF12", "text": "I recognize when a choice is presented as either/or when other options exist.", "reverse": false},
-    {"id": "LF13", "text": "I notice when a predicted chain of consequences is asserted without evidence for each link.", "reverse": false},
-    {"id": "LF14", "text": "I can tell when an argument's conclusion is already assumed in its premises.", "reverse": false},
-    {"id": "LF15", "text": "When I am confident in a position, I rarely look for evidence that could prove me wrong.", "reverse": true}
+    {"id": "LF11", "text": "I can explain why a particular line of reasoning is flawed without being adversarial.", "reverse": false},
+    {"id": "LF12", "text": "I construct responses that redirect conversations toward evidence and sound logic.", "reverse": false},
+    {"id": "LF13", "text": "I offer alternative framings when I encounter either/or thinking in discussions.", "reverse": false},
+    {"id": "LF14", "text": "I ask clarifying questions to expose weaknesses in an argument respectfully.", "reverse": false},
+    {"id": "LF15", "text": "I can articulate the difference between disagreeing with a person and disagreeing with their reasoning.", "reverse": false}
    ]
   },
   {
-   "id": "argument_construction",
-   "name": "Argument Construction",
-   "help": "Building reasoning that can withstand challenge.",
+   "id": "leadership_application",
+   "name": "Leadership Application",
+   "help": "These items assess how you apply reasoning skills in leadership contexts.",
    "items": [
-    {"id": "LF16", "text": "I can state the conclusion and the supporting premises of my own arguments clearly.", "reverse": false},
-    {"id": "LF17", "text": "I test each premise of my arguments to see whether it is a fact, an inference, or an assumption.", "reverse": false},
-    {"id": "LF18", "text": "I anticipate the strongest objections to my recommendations before I present them.", "reverse": false},
-    {"id": "LF19", "text": "I can evaluate the logical structure of an argument separately from whether I agree with its content.", "reverse": false},
-    {"id": "LF20", "text": "I treat disagreement as an opportunity to improve my reasoning rather than as a contest to win.", "reverse": false}
+    {"id": "LF16", "text": "I hold myself to the same logical standards I expect from others.", "reverse": false},
+    {"id": "LF17", "text": "I encourage my team to base decisions on evidence rather than tradition or authority alone.", "reverse": false},
+    {"id": "LF18", "text": "I create space for dissenting views so that weak arguments can be identified early.", "reverse": false},
+    {"id": "LF19", "text": "I model intellectual humility by acknowledging when my own reasoning is flawed.", "reverse": false},
+    {"id": "LF20", "text": "I use sound reasoning skills to evaluate proposals and strategic recommendations.", "reverse": false}
    ]
   }
  ],
@@ -68,17 +68,17 @@
   "post_experience": {
    "name": "Post-Experience Reflection",
    "items": [
-    {"id": "LF_PX1", "text": "This module improved my ability to recognize flawed reasoning in professional settings.", "reverse": false},
-    {"id": "LF_PX2", "text": "The observation scenarios helped me see how fallacies operate in real organizational discussions.", "reverse": false},
-    {"id": "LF_PX3", "text": "The simulation gave me realistic practice at evaluating and constructing arguments.", "reverse": false},
-    {"id": "LF_PX4", "text": "I feel more confident challenging weak reasoning in my leadership practice.", "reverse": false},
-    {"id": "LF_PX5", "text": "The skills I practiced in this training plan will change how I evaluate arguments and reasoning in real-world situations.", "reverse": false}
+    {"id": "LF_PX1", "text": "This training plan improved my ability to recognize logical fallacies in real-world arguments.", "reverse": false},
+    {"id": "LF_PX2", "text": "The observation scenario helped me see fallacies in action.", "reverse": false},
+    {"id": "LF_PX3", "text": "The AI simulation gave me practice constructing sound counter-arguments.", "reverse": false},
+    {"id": "LF_PX4", "text": "I feel more confident in my ability to engage with flawed reasoning professionally.", "reverse": false},
+    {"id": "LF_PX5", "text": "I would recommend this type of structured reasoning training to other leadership students.", "reverse": false}
    ]
   },
   "open_ended": [
-   {"id": "LF_Q1", "prompt": "Describe the most important insight about logical fallacies you gained from this module."},
-   {"id": "LF_Q2", "prompt": "Which moment in the observation or simulation had the greatest impact on you, and why?"},
-   {"id": "LF_Q3", "prompt": "How will you apply what you learned about sound reasoning in your leadership practice going forward?"}
+   {"id": "LF_Q1", "prompt": "Which logical fallacy from this training plan do you now recognize most frequently in your professional environment?"},
+   {"id": "LF_Q2", "prompt": "Describe a specific situation where you might apply what you learned about responding to fallacious reasoning."},
+   {"id": "LF_Q3", "prompt": "How has this training plan changed the way you evaluate arguments and make decisions as a leader?"}
   ]
  },
  "completion": {
