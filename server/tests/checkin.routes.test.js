@@ -34,10 +34,15 @@ jest.mock('../db', () => ({
 }));
 
 function createApp() {
-  delete require.cache[require.resolve('../index')];
-  Object.keys(require.cache).forEach((key) => {
-    if (key.includes('express-rate-limit')) delete require.cache[key];
-  });
+  // checkin/routes.js builds its rate limiter (and in-memory hit store) once
+  // at module load. Manually deleting individual require.cache entries (the
+  // previous approach here) does not reliably evict it in this Jest setup --
+  // re-requiring after the delete kept returning the same cached module, so
+  // the limiter's request count accumulated across every test in this file
+  // and eventually tripped 429s on unrelated, later tests. jest.resetModules()
+  // is the supported way to fully clear the registry between tests; jest.mock()
+  // factories above stay in effect for whatever gets required next.
+  jest.resetModules();
   return require('../index');
 }
 
@@ -173,8 +178,83 @@ describe('POST /api/responses', () => {
     expect(res.status).toBe(200);
   });
 
-  test('returns 501 when the configured identity_mode is not "email"', async () => {
+  test('accepts a valid key-mode submission and derives participant_id from the key', async () => {
     mockCourseConfig = { identity_mode: 'key' };
+    // identity: { key: ... } fully replaces validBaselineBody()'s identity: { email: ... }
+    // (object-literal override, not a merge) -- no email field is present in this body.
+    const body = { ...validBaselineBody(), identity: { key: 'blue-elephant-42' } };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(200);
+    expect(mockUpsertParticipant).toHaveBeenCalledTimes(1);
+    const [participantId, emailEncrypted, identityMode] = mockUpsertParticipant.mock.calls[0];
+    expect(participantId).toMatch(/^[a-f0-9]{64}$/); // HMAC-SHA256 hex digest
+    expect(emailEncrypted).toBeNull();
+    expect(identityMode).toBe('key');
+  });
+
+  test('derives the same participant_id for the same key across calls', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const body = { ...validBaselineBody(), identity: { key: 'blue-elephant-42' } };
+    await request(app).post('/api/responses').send(body);
+    await request(app).post('/api/responses').send(body);
+    const firstId = mockUpsertParticipant.mock.calls[0][0];
+    const secondId = mockUpsertParticipant.mock.calls[1][0];
+    expect(firstId).toBe(secondId);
+  });
+
+  test('returns 400 for key mode when identity.key is missing', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const body = { ...validBaselineBody() };
+    delete body.identity;
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(400);
+    expect(mockInsertResponse).not.toHaveBeenCalled();
+  });
+
+  test('returns 400 for key mode when identity.key is shorter than 3 characters', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const body = { ...validBaselineBody(), identity: { key: 'ab' } };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(400);
+  });
+
+  test('returns 400 for key mode when identity.key is longer than 100 characters', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const body = { ...validBaselineBody(), identity: { key: 'x'.repeat(101) } };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(400);
+  });
+
+  test('accepts a valid none-mode submission with no identity field', async () => {
+    mockCourseConfig = { identity_mode: 'none' };
+    const body = { ...validBaselineBody() };
+    delete body.identity;
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(200);
+    expect(mockUpsertParticipant).toHaveBeenCalledTimes(1);
+    const [participantId, emailEncrypted, identityMode] = mockUpsertParticipant.mock.calls[0];
+    expect(typeof participantId).toBe('string');
+    expect(participantId.length).toBeGreaterThan(0);
+    expect(emailEncrypted).toBeNull();
+    expect(identityMode).toBe('none');
+  });
+
+  test('generates a different participant_id for each none-mode submission (no pairing)', async () => {
+    mockCourseConfig = { identity_mode: 'none' };
+    const body = { ...validBaselineBody() };
+    delete body.identity;
+    await request(app).post('/api/responses').send(body);
+    await request(app).post('/api/responses').send(body);
+    const firstId = mockUpsertParticipant.mock.calls[0][0];
+    const secondId = mockUpsertParticipant.mock.calls[1][0];
+    expect(firstId).not.toBe(secondId);
+  });
+
+  test('still returns 501 for an identity_mode outside email/key/none', async () => {
+    // Defensive coverage: courses.js's own validator restricts identity_mode to
+    // email/key/none, so this path isn't reachable via real config today -- but
+    // routes.js shouldn't silently misbehave if that ever changes.
+    mockCourseConfig = { identity_mode: 'sso' };
     const res = await request(app).post('/api/responses').send(validBaselineBody());
     expect(res.status).toBe(501);
     expect(mockInsertResponse).not.toHaveBeenCalled();
