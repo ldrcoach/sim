@@ -154,7 +154,7 @@ the Debrief confirmation screen.
 `CHECKIN_ADMIN_TOKEN`):
 - `GET /api/admin/verify?code=` -- check whether a completion code is real
 - `GET /api/admin/summary?course=` -- response counts by module/phase, straightlining counts, last submission time
-- `GET /api/admin/export?course=&format=json|csv&shape=long|paired` -- long: one row per item; paired: one row per participant per module with baseline/debrief means and deltas
+- `GET /api/admin/export?course=&format=json|csv&shape=long|paired` -- long: one row per item; paired: one row per participant per module per subscale, with baseline/debrief means and deltas
 - `POST /api/admin/instruments/reload` -- re-read the instrument directory without redeploying
 - `DELETE /api/admin/participant?participant_id=` -- full erasure (responses and identity) for a right-to-erasure request
 - `POST /api/admin/purge-expired` -- the automatic retention job's actual logic; not scheduled by this repo, call it periodically from wherever you want the schedule to live (idempotent, safe to call repeatedly)
