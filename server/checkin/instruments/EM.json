@@ -1,0 +1,79 @@
+{
+ "course": "OBLD500",
+ "module": 5,
+ "abbrev": "EM",
+ "topic": "Empathy",
+ "version": "2027.01",
+ "scale": {
+  "points": 7,
+  "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ },
+ "intro": {
+  "baseline": "This questionnaire measures your current perspective taking, empathic concern, and use of empathy in leadership. Respond based on how you currently behave in your professional interactions. There are no right or wrong answers.",
+  "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+ },
+ "subscales": [
+  {
+   "id": "perspective_taking",
+   "name": "Perspective Taking",
+   "help": "These items measure your tendency to adopt other people's psychological viewpoints in leadership situations. Respond based on how you currently behave.",
+   "items": [
+    {"id": "EM01", "text": "Before criticizing someone on my team, I try to imagine how I would feel in their place.", "reverse": false},
+    {"id": "EM02", "text": "When I disagree with a colleague, I try to see things from their point of view before responding.", "reverse": false},
+    {"id": "EM03", "text": "I sometimes find it difficult to see things from another person's perspective in workplace situations.", "reverse": true},
+    {"id": "EM04", "text": "I try to look at every team member's side of a disagreement before I make a decision.", "reverse": false},
+    {"id": "EM05", "text": "When I'm frustrated with a direct report, I try to \"put myself in their shoes\" for a while.", "reverse": false},
+    {"id": "EM06", "text": "Before making a decision that affects others, I consider how it will look from their perspective.", "reverse": false},
+    {"id": "EM07", "text": "I believe there are two sides to every workplace disagreement, and I try to understand both.", "reverse": false}
+   ]
+  },
+  {
+   "id": "empathic_concern",
+   "name": "Empathic Concern",
+   "help": "These items measure your tendency to experience feelings of warmth, compassion, and care for others in leadership situations. Respond based on how you currently behave.",
+   "items": [
+    {"id": "EM08", "text": "When I see a colleague being treated unfairly, I feel a sense of concern for them.", "reverse": false},
+    {"id": "EM09", "text": "I am often moved by the challenges my team members face at work.", "reverse": false},
+    {"id": "EM10", "text": "I would describe myself as a fairly caring leader.", "reverse": false},
+    {"id": "EM11", "text": "Other people's professional setbacks do not usually disturb me a great deal.", "reverse": true},
+    {"id": "EM12", "text": "When I see someone on my team struggling, I feel a genuine desire to help.", "reverse": false},
+    {"id": "EM13", "text": "I am often quite touched by the personal stories my team members share with me.", "reverse": false},
+    {"id": "EM14", "text": "I feel concern when a colleague is going through a difficult time, even outside of work.", "reverse": false}
+   ]
+  },
+  {
+   "id": "leadership_application_of_empathy",
+   "name": "Leadership Application of Empathy",
+   "help": "These items measure how you apply empathy in your leadership practice. Respond based on how you currently behave.",
+   "items": [
+    {"id": "EM15", "text": "I create an environment where team members feel safe sharing their concerns and vulnerabilities.", "reverse": false},
+    {"id": "EM16", "text": "I adjust my leadership approach based on what I understand about each team member's unique needs and situation.", "reverse": false},
+    {"id": "EM17", "text": "I resist the urge to offer solutions before I fully understand how a team member is experiencing a situation.", "reverse": false},
+    {"id": "EM18", "text": "I follow through on concerns raised by team members to demonstrate that their perspective matters.", "reverse": false},
+    {"id": "EM19", "text": "I use empathy to build trust with individuals at all levels of the organization.", "reverse": false},
+    {"id": "EM20", "text": "I can distinguish between when a team member needs me to understand them and when they need me to take action.", "reverse": false}
+   ]
+  }
+ ],
+ "debrief_extras": {
+  "post_experience": {
+   "name": "Post-Experience Reflection",
+   "items": [
+    {"id": "EM_PX1", "text": "This module changed how I think about empathy in leadership.", "reverse": false},
+    {"id": "EM_PX2", "text": "The observation scenario helped me understand what it feels like to receive genuine empathy.", "reverse": false},
+    {"id": "EM_PX3", "text": "The AI simulation challenged me to practice empathy in a realistic way.", "reverse": false},
+    {"id": "EM_PX4", "text": "I feel more confident in my ability to demonstrate empathy in difficult workplace conversations.", "reverse": false},
+    {"id": "EM_PX5", "text": "The skills I practiced in this training plan will change how I lead in real-world situations.", "reverse": false}
+   ]
+  },
+  "open_ended": [
+   {"id": "EM_Q1", "prompt": "Describe a specific moment during this module that changed your understanding of empathy in leadership."},
+   {"id": "EM_Q2", "prompt": "What was the most challenging aspect of practicing empathy in the AI simulation? What made it difficult?"},
+   {"id": "EM_Q3", "prompt": "How do you plan to apply what you learned about empathy in your leadership practice going forward?"}
+  ]
+ },
+ "completion": {
+  "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
+  "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+ }
+}

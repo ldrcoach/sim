@@ -103,6 +103,15 @@ describe('validateInstrument', () => {
     expect(errors.some((e) => e.includes('at least 2 reverse-scored items'))).toBe(true);
   });
 
+  test('accepts an instrument with no reverse-scored items when min_reverse_items is 0', () => {
+    const data = validInstrument({ min_reverse_items: 0, psychometric_note: 'Positively keyed adaptation.' });
+    data.subscales[0].items[4].reverse = false;
+    data.subscales[1].items[2].reverse = false;
+    const { valid, errors } = validateInstrument(data);
+    expect(errors).toEqual([]);
+    expect(valid).toBe(true);
+  });
+
   test('rejects duplicate item ids', () => {
     const data = validInstrument();
     data.subscales[1].items[0].id = 'AL01'; // duplicates subscale 0's first item

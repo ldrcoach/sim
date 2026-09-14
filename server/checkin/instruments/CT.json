@@ -1,0 +1,86 @@
+{
+ "course": "OBLD500",
+ "module": 3,
+ "abbrev": "CT",
+ "topic": "Critical Thinking",
+ "version": "2027.01",
+ "scale": {
+  "points": 7,
+  "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ },
+ "intro": {
+  "baseline": "The Critical Thinking Practice Scale measures how you currently use the Elements of Thought, the Intellectual Standards, and the Intellectual Traits in your leadership practice. Respond based on what you actually do now. There are no right or wrong answers.",
+  "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+ },
+ "subscales": [
+  {
+   "id": "elements_of_thought",
+   "name": "Elements of Thought",
+   "help": "Identifying and examining the components of reasoning.",
+   "items": [
+    {"id": "CT01", "text": "When facing a complex decision, I identify the purpose of my reasoning before proceeding.", "reverse": false},
+    {"id": "CT02", "text": "I examine the assumptions underlying my conclusions before accepting them.", "reverse": false},
+    {"id": "CT03", "text": "I consider multiple points of view when analyzing a problem.", "reverse": false},
+    {"id": "CT04", "text": "I tend to accept information at face value without questioning its source.", "reverse": true},
+    {"id": "CT05", "text": "I trace the implications and consequences of my decisions before committing to them.", "reverse": false}
+   ]
+  },
+  {
+   "id": "intellectual_standards",
+   "name": "Intellectual Standards",
+   "help": "Applying quality criteria to reasoning.",
+   "items": [
+    {"id": "CT06", "text": "I evaluate whether my reasoning is clear enough for others to understand.", "reverse": false},
+    {"id": "CT07", "text": "I check whether the information I rely on is accurate and current.", "reverse": false},
+    {"id": "CT08", "text": "I often make decisions without considering whether my analysis is deep enough.", "reverse": true},
+    {"id": "CT09", "text": "I assess whether my thinking addresses the most significant aspects of an issue.", "reverse": false},
+    {"id": "CT10", "text": "I apply logical consistency as a standard when evaluating arguments.", "reverse": false}
+   ]
+  },
+  {
+   "id": "intellectual_traits",
+   "name": "Intellectual Traits",
+   "help": "The dispositions that sustain disciplined thinking.",
+   "items": [
+    {"id": "CT11", "text": "I am willing to change my position when presented with compelling evidence.", "reverse": false},
+    {"id": "CT12", "text": "I hold myself to the same intellectual standards I apply to others.", "reverse": false},
+    {"id": "CT13", "text": "I avoid raising objections in group settings because it might create conflict.", "reverse": true},
+    {"id": "CT14", "text": "I persist in working through complex problems rather than settling for easy answers.", "reverse": false},
+    {"id": "CT15", "text": "I actively seek out perspectives that differ from my own.", "reverse": false}
+   ]
+  },
+  {
+   "id": "applied_critical_thinking_in_leadership",
+   "name": "Applied Critical Thinking in Leadership",
+   "help": "Integrating critical thinking into leadership practice.",
+   "items": [
+    {"id": "CT16", "text": "I routinely analyze the quality of reasoning in organizational communications.", "reverse": false},
+    {"id": "CT17", "text": "I create conditions in my team that encourage questioning and constructive challenge.", "reverse": false},
+    {"id": "CT18", "text": "I rely on intuition more than systematic analysis when making leadership decisions.", "reverse": true},
+    {"id": "CT19", "text": "I apply a structured thinking process to important decisions rather than deciding on instinct.", "reverse": false},
+    {"id": "CT20", "text": "I help others examine their assumptions and reasoning, not just their conclusions.", "reverse": false}
+   ]
+  }
+ ],
+ "debrief_extras": {
+  "post_experience": {
+   "name": "Post-Experience Reflection",
+   "items": [
+    {"id": "CT_PX1", "text": "This training plan helped me understand the structure of my own thinking.", "reverse": false},
+    {"id": "CT_PX2", "text": "I can now identify the Elements of Thought in organizational communication.", "reverse": false},
+    {"id": "CT_PX3", "text": "I am more likely to apply Intellectual Standards to evaluate reasoning after completing this training plan.", "reverse": false},
+    {"id": "CT_PX4", "text": "The exercises in this training plan were relevant to my leadership practice.", "reverse": false},
+    {"id": "CT_PX5", "text": "I would recommend this training plan to a colleague.", "reverse": false}
+   ]
+  },
+  "open_ended": [
+   {"id": "CT_Q1", "prompt": "Describe one specific moment during this training plan when your understanding of critical thinking shifted or deepened."},
+   {"id": "CT_Q2", "prompt": "How, if at all, has this training plan changed the way you approach decisions in your leadership role?"},
+   {"id": "CT_Q3", "prompt": "What aspect of the Paul-Elder framework do you expect to use most frequently going forward, and why?"}
+  ]
+ },
+ "completion": {
+  "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
+  "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+ }
+}

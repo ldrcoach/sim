@@ -1,0 +1,86 @@
+{
+ "course": "OBLD500",
+ "module": 9,
+ "abbrev": "SL",
+ "topic": "Storytelling and the Hero's Journey",
+ "version": "2027.01",
+ "scale": {
+  "points": 7,
+  "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ },
+ "intro": {
+  "baseline": "This questionnaire measures your current understanding of storytelling as leadership, narrative frameworks, critical awareness of narrative, and storytelling practice. Respond based on what you actually do now. There are no right or wrong answers.",
+  "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+ },
+ "subscales": [
+  {
+   "id": "understanding_storytelling_as_leadership",
+   "name": "Understanding Storytelling as Leadership",
+   "help": "Why stories are a leadership competency, not just a communication technique.",
+   "items": [
+    {"id": "SL01", "text": "I understand why storytelling is an essential leadership competency, not just a communication technique.", "reverse": false},
+    {"id": "SL02", "text": "I can explain how stories build trust between leaders and their teams.", "reverse": false},
+    {"id": "SL03", "text": "I recognize the difference between sharing data and telling a story that makes data meaningful.", "reverse": false},
+    {"id": "SL04", "text": "I believe that leaders who rely on stories rather than evidence are less effective.", "reverse": true},
+    {"id": "SL05", "text": "I can identify specific moments when a leader's story changed how I felt about a situation.", "reverse": false}
+   ]
+  },
+  {
+   "id": "narrative_framework_knowledge",
+   "name": "Narrative Framework Knowledge",
+   "help": "The Hero's Journey and crucible experiences.",
+   "items": [
+    {"id": "SL06", "text": "I can describe the basic structure of the Hero's Journey and how it applies to leadership narratives.", "reverse": false},
+    {"id": "SL07", "text": "I understand how 'crucible' experiences can become the foundation of a leader's story.", "reverse": false},
+    {"id": "SL08", "text": "I find frameworks like the Hero's Journey too simplistic to capture real leadership development.", "reverse": true},
+    {"id": "SL09", "text": "I can identify Hero's Journey stages in stories told by leaders I know or admire.", "reverse": false},
+    {"id": "SL10", "text": "I understand the connection between a leader's life story and authentic leadership development.", "reverse": false}
+   ]
+  },
+  {
+   "id": "critical_awareness_of_narrative",
+   "name": "Critical Awareness of Narrative",
+   "help": "The limits of the Hero's Journey and whose stories get told.",
+   "items": [
+    {"id": "SL11", "text": "I can identify limitations of the Hero's Journey as a universal framework.", "reverse": false},
+    {"id": "SL12", "text": "I recognize that power relations shape which leadership stories are valued and which are marginalized.", "reverse": false},
+    {"id": "SL13", "text": "I believe the Hero's Journey framework works equally well for all leaders regardless of cultural background.", "reverse": true},
+    {"id": "SL14", "text": "I can describe alternative narrative structures that may better fit diverse leadership experiences.", "reverse": false},
+    {"id": "SL15", "text": "I am aware of how my own cultural background shapes the stories I tell about my leadership.", "reverse": false}
+   ]
+  },
+  {
+   "id": "storytelling_practice_and_application",
+   "name": "Storytelling Practice and Application",
+   "help": "Crafting, adapting, and using leadership stories.",
+   "items": [
+    {"id": "SL16", "text": "I feel confident in my ability to craft a coherent leadership story from my own experience.", "reverse": false},
+    {"id": "SL17", "text": "I can adapt the same leadership story for different audiences and purposes.", "reverse": false},
+    {"id": "SL18", "text": "I find it difficult to share personal stories in professional settings because it feels too vulnerable.", "reverse": true},
+    {"id": "SL19", "text": "I can help others discover and articulate their own leadership stories.", "reverse": false},
+    {"id": "SL20", "text": "I regularly use storytelling as a deliberate leadership practice in my professional life.", "reverse": false}
+   ]
+  }
+ ],
+ "debrief_extras": {
+  "post_experience": {
+   "name": "Post-Experience Reflection",
+   "items": [
+    {"id": "SL_PX1", "text": "The observation scenario helped me understand storytelling coaching in a way that reading alone could not.", "reverse": false},
+    {"id": "SL_PX2", "text": "I felt more engaged with the storytelling content because of the simulation practice.", "reverse": false},
+    {"id": "SL_PX3", "text": "The AI simulation gave me useful feedback on my coaching approach.", "reverse": false},
+    {"id": "SL_PX4", "text": "I would recommend this kind of practice to other graduate students.", "reverse": false},
+    {"id": "SL_PX5", "text": "The combination of readings, videos, observation, and simulation created a complete learning experience.", "reverse": false}
+   ]
+  },
+  "open_ended": [
+   {"id": "SL_Q1", "prompt": "What was the most valuable insight you gained from this training plan about storytelling and leadership?"},
+   {"id": "SL_Q2", "prompt": "Describe a specific moment during the simulation that changed how you think about leadership storytelling."},
+   {"id": "SL_Q3", "prompt": "How do you plan to apply what you learned about storytelling in your current or future leadership role?"}
+  ]
+ },
+ "completion": {
+  "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
+  "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+ }
+}

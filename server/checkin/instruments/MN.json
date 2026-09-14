@@ -1,0 +1,86 @@
+{
+ "course": "OBLD500",
+ "module": 7,
+ "abbrev": "MN",
+ "topic": "Mentoring",
+ "version": "2027.01",
+ "scale": {
+  "points": 7,
+  "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
+ },
+ "intro": {
+  "baseline": "This questionnaire measures your current understanding of mentoring, your developmental network, your mentoring conversation skills, and how you sustain mentoring relationships. Respond based on what you actually do now. There are no right or wrong answers.",
+  "debrief": "You completed this questionnaire at the start of the module. Answer again based on how you behave now. Then reflect on the module."
+ },
+ "subscales": [
+  {
+   "id": "understanding_mentoring_functions",
+   "name": "Understanding Mentoring Functions",
+   "help": "Knowledge of career and psychosocial mentoring functions.",
+   "items": [
+    {"id": "MN01", "text": "I can clearly distinguish between career mentoring functions and psychosocial mentoring functions.", "reverse": false},
+    {"id": "MN02", "text": "I understand how mentoring differs from coaching, sponsoring, and managing.", "reverse": false},
+    {"id": "MN03", "text": "I can articulate the evidence-based benefits of mentoring for proteges.", "reverse": false},
+    {"id": "MN04", "text": "I believe that mentoring is primarily about giving advice to less experienced colleagues.", "reverse": true},
+    {"id": "MN05", "text": "I recognize that effective mentoring requires providing both career support and emotional support.", "reverse": false}
+   ]
+  },
+  {
+   "id": "developmental_network_awareness",
+   "name": "Developmental Network Awareness",
+   "help": "Understanding of multiple developmental relationships.",
+   "items": [
+    {"id": "MN06", "text": "I actively cultivate developmental relationships with people from different parts of my organization or profession.", "reverse": false},
+    {"id": "MN07", "text": "I can identify multiple people who contribute to my professional development in different ways.", "reverse": false},
+    {"id": "MN08", "text": "I believe that having one strong mentor is sufficient for career development.", "reverse": true},
+    {"id": "MN09", "text": "I understand how the diversity and strength of my developmental network affects my career outcomes.", "reverse": false},
+    {"id": "MN10", "text": "I am intentional about building relationships with people whose strengths complement my own.", "reverse": false}
+   ]
+  },
+  {
+   "id": "mentoring_conversation_skills",
+   "name": "Mentoring Conversation Skills",
+   "help": "Empathy, inquiry, and restraint from advice-giving.",
+   "items": [
+    {"id": "MN11", "text": "When mentoring or advising others, I ask questions more often than I give answers.", "reverse": false},
+    {"id": "MN12", "text": "I can listen to someone describe a professional challenge without immediately offering solutions.", "reverse": false},
+    {"id": "MN13", "text": "When someone shares a problem with me, my first instinct is to tell them what I would do.", "reverse": true},
+    {"id": "MN14", "text": "I am skilled at reflecting back what someone is feeling, not just what they are saying.", "reverse": false},
+    {"id": "MN15", "text": "I create space for others to arrive at their own insights rather than providing my insights for them.", "reverse": false}
+   ]
+  },
+  {
+   "id": "sustaining_mentoring_relationships",
+   "name": "Sustaining Mentoring Relationships",
+   "help": "Assessing quality, sustaining, and concluding relationships.",
+   "items": [
+    {"id": "MN16", "text": "I can assess whether a developmental relationship is still contributing to growth for both parties.", "reverse": false},
+    {"id": "MN17", "text": "I am comfortable having honest conversations about the future of a mentoring relationship.", "reverse": false},
+    {"id": "MN18", "text": "I find it difficult to end or change a mentoring relationship, even when it is no longer productive.", "reverse": true},
+    {"id": "MN19", "text": "I understand that outgrowing a mentoring relationship is a sign of development, not disloyalty.", "reverse": false},
+    {"id": "MN20", "text": "I know how to conclude a mentoring relationship with gratitude and mutual respect.", "reverse": false}
+   ]
+  }
+ ],
+ "debrief_extras": {
+  "post_experience": {
+   "name": "Post-Experience Reflection",
+   "items": [
+    {"id": "MN_PX1", "text": "The observation scenario helped me see mentoring behaviors I might not have noticed otherwise.", "reverse": false},
+    {"id": "MN_PX2", "text": "Practicing with the AI simulation gave me useful feedback on my mentoring approach.", "reverse": false},
+    {"id": "MN_PX3", "text": "I feel more confident in my ability to have effective mentoring conversations after completing this training plan.", "reverse": false},
+    {"id": "MN_PX4", "text": "The foundational content gave me new frameworks I can apply in my professional practice.", "reverse": false},
+    {"id": "MN_PX5", "text": "I would recommend this training plan to a colleague who wants to improve their mentoring skills.", "reverse": false}
+   ]
+  },
+  "open_ended": [
+   {"id": "MN_Q1", "prompt": "Describe one specific insight from this training plan that you plan to apply in your professional practice."},
+   {"id": "MN_Q2", "prompt": "What was the most challenging aspect of the AI simulation for you, and what did you learn from it?"},
+   {"id": "MN_Q3", "prompt": "How has your understanding of mentoring changed as a result of completing this training plan?"}
+  ]
+ },
+ "completion": {
+  "baseline": "Thank you. Copy your completion code into the Canvas item {module}.3 Baseline Check Completion, then continue to Ground School.",
+  "debrief": "Thank you. Copy your completion code into the Canvas item {module}.10 Debrief Completion."
+ }
+}
