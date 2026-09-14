@@ -1,0 +1,27 @@
+name: Retention purge (Check-In Module)
+
+on:
+  schedule:
+    # 09:17 UTC daily -- off the hour, to avoid GitHub Actions' scheduling
+    # pile-up at exact hour/half-hour marks.
+    - cron: '17 9 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  purge-expired:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call POST /api/admin/purge-expired
+        env:
+          CHECKIN_ADMIN_TOKEN: ${{ secrets.CHECKIN_ADMIN_TOKEN }}
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            https://sim.ldrcoach.com/api/admin/purge-expired \
+            -H "X-Admin-Token: $CHECKIN_ADMIN_TOKEN")
+          status="${response##*$'\n'}"
+          body="${response%$'\n'*}"
+          echo "$body"
+          if [ "$status" != "200" ]; then
+            echo "purge-expired returned HTTP $status"
+            exit 1
+          fi
