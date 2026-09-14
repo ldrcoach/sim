@@ -68,4 +68,17 @@ describe('verifyCompletionCode', () => {
   test('rejects a code of the wrong length without throwing', () => {
     expect(verifyCompletionCode('short', baseArgs)).toBe(false);
   });
+
+  test('rejects a same-character-length but different-byte-length code without throwing', () => {
+    const code = generateCompletionCode(baseArgs);
+    // 'é' is one UTF-16 code unit (so it matches `code.length` in JS string
+    // terms) but encodes to 2 bytes in UTF-8, so the resulting Buffer has a
+    // different byte length than `expected`'s Buffer even though the JS
+    // string lengths are equal. This must be rejected cleanly, not thrown.
+    const sameCharLengthDifferentByteLength = 'é'.repeat(code.length);
+    expect(sameCharLengthDifferentByteLength.length).toBe(code.length);
+    expect(Buffer.from(sameCharLengthDifferentByteLength).length).not.toBe(Buffer.from(code).length);
+    expect(() => verifyCompletionCode(sameCharLengthDifferentByteLength, baseArgs)).not.toThrow();
+    expect(verifyCompletionCode(sameCharLengthDifferentByteLength, baseArgs)).toBe(false);
+  });
 });

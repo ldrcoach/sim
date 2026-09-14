@@ -34,9 +34,16 @@ function generateCompletionCode({ abbrev, module, phase, course, participantId, 
 }
 
 function verifyCompletionCode(code, args) {
+  if (typeof code !== 'string') return false;
   const expected = generateCompletionCode(args);
-  if (typeof code !== 'string' || expected.length !== code.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(code));
+  const expectedBuf = Buffer.from(expected);
+  const codeBuf = Buffer.from(code);
+  // Both the byte-length pre-check AND timingSafeEqual (not a bare ===) are required:
+  // timingSafeEqual throws if the buffers differ in byte length, and a plain ===
+  // (or a naive char-by-char loop) would leak timing information about how many
+  // leading bytes match, reopening the constant-time comparison this guards against.
+  if (expectedBuf.length !== codeBuf.length) return false;
+  return crypto.timingSafeEqual(expectedBuf, codeBuf);
 }
 
 module.exports = { generateCompletionCode, verifyCompletionCode, base32Encode };
