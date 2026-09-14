@@ -177,6 +177,19 @@ router.post('/purge-expired', async (req, res) => {
         results.push({ course, purged: 0, threshold: threshold.toISOString(), status: 'error', error: 'Internal error' });
       }
     }
+
+    // Courses that have real submitted data but no courses.json entry never
+    // appear in the loop above (getAllCourseConfigs only knows about
+    // configured courses), so they'd otherwise have no automatic retention
+    // path at all -- surface them here so an admin can see the gap and act
+    // on it (add a courses.json entry, or purge manually via DELETE
+    // /api/admin/participant), rather than the gap being invisible.
+    const coursesWithData = await checkinDb.findDistinctCoursesWithParticipantData();
+    const unconfigured = coursesWithData.filter((course) => !(course in configs));
+    for (const course of unconfigured) {
+      results.push({ course, purged: 0, threshold: null, status: 'unconfigured' });
+    }
+
     console.log(`[Admin] purge-expired: ${results.map((r) => `${r.course}=${r.status}(${r.purged})`).join(', ')}`);
     res.json({ results });
   } catch (err) {

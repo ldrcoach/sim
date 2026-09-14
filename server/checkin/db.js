@@ -168,6 +168,12 @@ async function purgeParticipantEmails(participantIds) {
   return result.rowCount;
 }
 
+async function findDistinctCoursesWithParticipantData() {
+  const p = getPool();
+  const result = await p.query(`SELECT DISTINCT course FROM checkin_responses`);
+  return result.rows.map((r) => r.course);
+}
+
 async function findResponseByCompletionCode(code) {
   const p = getPool();
   const result = await p.query(
@@ -263,6 +269,7 @@ module.exports = {
   recordInstrumentVersion,
   findParticipantIdsWithEmailByCourse,
   purgeParticipantEmails,
+  findDistinctCoursesWithParticipantData,
   findResponseByCompletionCode,
   getSummary,
   getExportLongRows,

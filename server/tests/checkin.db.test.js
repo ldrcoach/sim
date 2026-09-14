@@ -146,6 +146,21 @@ describe('purgeParticipantEmails', () => {
   });
 });
 
+describe('findDistinctCoursesWithParticipantData', () => {
+  test('returns the distinct list of courses that have submitted responses', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [{ course: 'OBLD500' }, { course: 'PSYC301' }] });
+    const result = await checkinDb.findDistinctCoursesWithParticipantData();
+    expect(result).toEqual(['OBLD500', 'PSYC301']);
+    expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('SELECT DISTINCT course FROM checkin_responses'));
+  });
+
+  test('returns an empty array when there is no data', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+    const result = await checkinDb.findDistinctCoursesWithParticipantData();
+    expect(result).toEqual([]);
+  });
+});
+
 describe('findResponseByCompletionCode', () => {
   test('returns the matching response row', async () => {
     mockQuery.mockResolvedValueOnce({

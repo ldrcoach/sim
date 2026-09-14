@@ -8,6 +8,7 @@ const mockGetExportPairedRows = jest.fn();
 const mockDeleteParticipant = jest.fn();
 const mockFindParticipantIdsWithEmailByCourse = jest.fn();
 const mockPurgeParticipantEmails = jest.fn();
+const mockFindDistinctCoursesWithParticipantData = jest.fn();
 
 jest.mock('../checkin/db', () => ({
   isAvailable: () => mockAvailable,
@@ -18,6 +19,7 @@ jest.mock('../checkin/db', () => ({
   deleteParticipant: (...args) => mockDeleteParticipant(...args),
   findParticipantIdsWithEmailByCourse: (...args) => mockFindParticipantIdsWithEmailByCourse(...args),
   purgeParticipantEmails: (...args) => mockPurgeParticipantEmails(...args),
+  findDistinctCoursesWithParticipantData: (...args) => mockFindDistinctCoursesWithParticipantData(...args),
 }));
 
 const mockGetAllCourseConfigs = jest.fn();
@@ -64,6 +66,7 @@ describe('admin routes', () => {
     mockDeleteParticipant.mockReset();
     mockFindParticipantIdsWithEmailByCourse.mockReset();
     mockPurgeParticipantEmails.mockReset();
+    mockFindDistinctCoursesWithParticipantData.mockReset().mockResolvedValue([]);
     mockGetAllCourseConfigs.mockReset().mockReturnValue({});
     mockInstrumentReload.mockReset();
   });
@@ -278,6 +281,21 @@ describe('admin routes', () => {
         { course: 'OBLD501', purged: 1, threshold: expect.any(String), status: 'purged' },
       ]);
       expect(JSON.stringify(res.body)).not.toContain('internal-db-host');
+    });
+
+    test('surfaces a course with participant data but no courses.json entry', async () => {
+      mockGetAllCourseConfigs.mockReturnValueOnce({
+        OBLD500: { course_end_date: '2099-01-01', retention_days_after_end: 90 }, // far future, not yet due
+      });
+      mockFindDistinctCoursesWithParticipantData.mockResolvedValueOnce(['OBLD500', 'PSYC301']);
+      const res = await request(app).post('/api/admin/purge-expired').set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(200);
+      expect(res.body.results).toEqual([
+        { course: 'OBLD500', purged: 0, threshold: expect.any(String), status: 'not yet due' },
+        { course: 'PSYC301', purged: 0, threshold: null, status: 'unconfigured' },
+      ]);
+      expect(mockFindParticipantIdsWithEmailByCourse).not.toHaveBeenCalledWith('PSYC301');
+      expect(mockPurgeParticipantEmails).not.toHaveBeenCalled();
     });
   });
 
