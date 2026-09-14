@@ -3,6 +3,8 @@ const rateLimit = require('express-rate-limit');
 const { requireAdminToken } = require('./adminAuth');
 const checkinDb = require('./db');
 const { toCsv } = require('./csv');
+const instrumentLoader = require('./instrumentLoader');
+const courses = require('./courses');
 
 const router = express.Router();
 
@@ -121,6 +123,53 @@ router.get('/export', async (req, res) => {
     }
   } catch (err) {
     console.error('[Admin] export failed:', err.message);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+router.post('/instruments/reload', (req, res) => {
+  try {
+    instrumentLoader.reload();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Admin] instrument reload failed:', err.message);
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/participant', async (req, res) => {
+  try {
+    const { participant_id: participantId } = req.query;
+    if (!participantId || typeof participantId !== 'string') {
+      return res.status(400).json({ error: 'participant_id query parameter is required' });
+    }
+    const result = await checkinDb.deleteParticipant(participantId);
+    res.json(result);
+  } catch (err) {
+    console.error('[Admin] participant deletion failed:', err.message);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+router.post('/purge-expired', async (req, res) => {
+  try {
+    const configs = courses.getAllCourseConfigs();
+    const now = new Date();
+    const results = [];
+    for (const [course, cfg] of Object.entries(configs)) {
+      const threshold = new Date(cfg.course_end_date);
+      threshold.setDate(threshold.getDate() + cfg.retention_days_after_end);
+      if (now < threshold) {
+        results.push({ course, purged: 0, threshold: threshold.toISOString(), status: 'not yet due' });
+        continue;
+      }
+      const ids = await checkinDb.findParticipantIdsWithEmailByCourse(course);
+      const purged = await checkinDb.purgeParticipantEmails(ids);
+      results.push({ course, purged, threshold: threshold.toISOString(), status: 'purged' });
+    }
+    res.json({ results });
+  } catch (err) {
+    console.error('[Admin] purge-expired failed:', err.message);
     res.status(500).json({ error: 'Internal error' });
   }
 });

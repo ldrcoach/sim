@@ -226,6 +226,17 @@ async function getExportPairedRows(course) {
   return result.rows;
 }
 
+async function deleteParticipant(participantId) {
+  const p = getPool();
+  // Delete responses first: checkin_responses.participant_id has no ON DELETE
+  // CASCADE from checkin_participants (only the reverse -- response_items and
+  // subscale_scores cascade FROM checkin_responses). Deleting the participant
+  // row first would hit a foreign key violation if any responses still exist.
+  const responsesResult = await p.query(`DELETE FROM checkin_responses WHERE participant_id = $1`, [participantId]);
+  const participantResult = await p.query(`DELETE FROM checkin_participants WHERE participant_id = $1`, [participantId]);
+  return { responses_deleted: responsesResult.rowCount, participant_deleted: participantResult.rowCount > 0 };
+}
+
 module.exports = {
   isAvailable,
   initCheckinSchema,
@@ -239,4 +250,5 @@ module.exports = {
   getSummary,
   getExportLongRows,
   getExportPairedRows,
+  deleteParticipant,
 };

@@ -213,3 +213,21 @@ describe('getExportPairedRows', () => {
     expect(sql).toContain('ORDER BY submitted_at DESC, id DESC LIMIT 1');
   });
 });
+
+describe('deleteParticipant', () => {
+  test('deletes responses before the participant row, in that order', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rowCount: 3 }) // responses deleted
+      .mockResolvedValueOnce({ rowCount: 1 }); // participant deleted
+    const result = await checkinDb.deleteParticipant('p1');
+    expect(result).toEqual({ responses_deleted: 3, participant_deleted: true });
+    expect(mockQuery.mock.calls[0][0]).toContain('DELETE FROM checkin_responses');
+    expect(mockQuery.mock.calls[1][0]).toContain('DELETE FROM checkin_participants');
+  });
+
+  test('participant_deleted is false when no participant row existed', async () => {
+    mockQuery.mockResolvedValueOnce({ rowCount: 0 }).mockResolvedValueOnce({ rowCount: 0 });
+    const result = await checkinDb.deleteParticipant('nonexistent');
+    expect(result.participant_deleted).toBe(false);
+  });
+});

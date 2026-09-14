@@ -5,6 +5,9 @@ const mockFindResponseByCompletionCode = jest.fn();
 const mockGetSummary = jest.fn();
 const mockGetExportLongRows = jest.fn();
 const mockGetExportPairedRows = jest.fn();
+const mockDeleteParticipant = jest.fn();
+const mockFindParticipantIdsWithEmailByCourse = jest.fn();
+const mockPurgeParticipantEmails = jest.fn();
 
 jest.mock('../checkin/db', () => ({
   isAvailable: () => mockAvailable,
@@ -12,6 +15,26 @@ jest.mock('../checkin/db', () => ({
   getSummary: (...args) => mockGetSummary(...args),
   getExportLongRows: (...args) => mockGetExportLongRows(...args),
   getExportPairedRows: (...args) => mockGetExportPairedRows(...args),
+  deleteParticipant: (...args) => mockDeleteParticipant(...args),
+  findParticipantIdsWithEmailByCourse: (...args) => mockFindParticipantIdsWithEmailByCourse(...args),
+  purgeParticipantEmails: (...args) => mockPurgeParticipantEmails(...args),
+}));
+
+const mockGetAllCourseConfigs = jest.fn();
+jest.mock('../checkin/courses', () => ({
+  getAllCourseConfigs: () => mockGetAllCourseConfigs(),
+  load: jest.fn(),
+  ensureLoaded: jest.fn(),
+  getCourseConfig: jest.fn(),
+}));
+
+const mockInstrumentReload = jest.fn();
+jest.mock('../checkin/instrumentLoader', () => ({
+  load: jest.fn(),
+  ensureLoaded: jest.fn(),
+  getInstrument: jest.fn(),
+  getPublicView: jest.fn(),
+  reload: (...args) => mockInstrumentReload(...args),
 }));
 
 function buildApp() {
@@ -38,6 +61,11 @@ describe('admin routes', () => {
     mockGetSummary.mockReset();
     mockGetExportLongRows.mockReset();
     mockGetExportPairedRows.mockReset();
+    mockDeleteParticipant.mockReset();
+    mockFindParticipantIdsWithEmailByCourse.mockReset();
+    mockPurgeParticipantEmails.mockReset();
+    mockGetAllCourseConfigs.mockReset().mockReturnValue({});
+    mockInstrumentReload.mockReset();
   });
 
   afterAll(() => {
@@ -164,6 +192,61 @@ describe('admin routes', () => {
         .get('/api/admin/export?course=OBLD500&shape=triangular')
         .set('X-Admin-Token', ADMIN_TOKEN);
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('POST /api/admin/instruments/reload', () => {
+    test('reloads and returns ok', async () => {
+      mockInstrumentReload.mockReturnValueOnce(new Map());
+      const res = await request(app).post('/api/admin/instruments/reload').set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ ok: true });
+      expect(mockInstrumentReload).toHaveBeenCalled();
+    });
+
+    test('returns 400 when reload throws (bad instrument file)', async () => {
+      mockInstrumentReload.mockImplementationOnce(() => { throw new Error('bad instrument'); });
+      const res = await request(app).post('/api/admin/instruments/reload').set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('DELETE /api/admin/participant', () => {
+    test('deletes a participant and their responses', async () => {
+      mockDeleteParticipant.mockResolvedValueOnce({ responses_deleted: 2, participant_deleted: true });
+      const res = await request(app)
+        .delete('/api/admin/participant?participant_id=p1')
+        .set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ responses_deleted: 2, participant_deleted: true });
+    });
+
+    test('returns 400 when participant_id is missing', async () => {
+      const res = await request(app).delete('/api/admin/participant').set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('POST /api/admin/purge-expired', () => {
+    test('purges a course whose threshold has passed', async () => {
+      mockGetAllCourseConfigs.mockReturnValueOnce({
+        OBLD500: { course_end_date: '2020-01-01', retention_days_after_end: 1 }, // long past
+      });
+      mockFindParticipantIdsWithEmailByCourse.mockResolvedValueOnce(['p1', 'p2']);
+      mockPurgeParticipantEmails.mockResolvedValueOnce(2);
+      const res = await request(app).post('/api/admin/purge-expired').set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(200);
+      expect(res.body.results).toEqual([{ course: 'OBLD500', purged: 2, threshold: expect.any(String), status: 'purged' }]);
+    });
+
+    test('does not purge a course whose threshold has not passed yet', async () => {
+      mockGetAllCourseConfigs.mockReturnValueOnce({
+        OBLD500: { course_end_date: '2099-01-01', retention_days_after_end: 90 }, // far future
+      });
+      const res = await request(app).post('/api/admin/purge-expired').set('X-Admin-Token', ADMIN_TOKEN);
+      expect(res.status).toBe(200);
+      expect(res.body.results).toEqual([{ course: 'OBLD500', purged: 0, threshold: expect.any(String), status: 'not yet due' }]);
+      expect(mockFindParticipantIdsWithEmailByCourse).not.toHaveBeenCalled();
     });
   });
 
