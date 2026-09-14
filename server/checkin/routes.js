@@ -1,5 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
 const instrumentLoader = require('./instrumentLoader');
 const identity = require('./identity');
 const completionCode = require('./completionCode');
@@ -34,6 +35,12 @@ function isValidEmail(email) {
   if (dotIndex <= 0 || dotIndex === domain.length - 1) return false; // dot present, not at domain's edges
   return true;
 }
+
+function isValidKey(key) {
+  if (typeof key !== 'string') return false;
+  const trimmed = key.trim();
+  return trimmed.length >= 3 && trimmed.length <= 100;
+}
 const VALID_PHASES = ['baseline', 'debrief'];
 
 router.get('/instrument/:course/:module/:phase', checkinLimiter, (req, res) => {
@@ -51,6 +58,11 @@ router.get('/instrument/:course/:module/:phase', checkinLimiter, (req, res) => {
   if (!view) {
     return res.status(404).json({ error: 'Instrument not found' });
   }
+
+  const courseConfig = courses.getCourseConfig(course);
+  view.identity_mode = courseConfig ? courseConfig.identity_mode : 'email';
+  view.email_domain_hint = courseConfig ? courseConfig.email_domain_hint : null;
+
   res.json(view);
 });
 
@@ -68,20 +80,28 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
     if (!VALID_PHASES.includes(phase)) {
       return res.status(400).json({ error: 'phase must be "baseline" or "debrief"' });
     }
-    if (!ident || !isValidEmail(ident.email)) {
-      return res.status(400).json({ error: 'identity.email is required and must be a valid email' });
+
+    const courseConfig = courses.getCourseConfig(course);
+    const identityMode = courseConfig ? courseConfig.identity_mode : 'email';
+
+    if (identityMode === 'email') {
+      if (!ident || !isValidEmail(ident.email)) {
+        return res.status(400).json({ error: 'identity.email is required and must be a valid email' });
+      }
+    } else if (identityMode === 'key') {
+      if (!ident || !isValidKey(ident.key)) {
+        return res.status(400).json({ error: 'identity.key is required and must be between 3 and 100 characters' });
+      }
+    } else if (identityMode !== 'none') {
+      return res.status(501).json({ error: `identity_mode "${identityMode}" is not yet implemented` });
     }
+    // 'none' mode requires no identity field at all -- any submitted `identity` is ignored.
+
     if (!started_at || typeof started_at !== 'string') {
       return res.status(400).json({ error: 'started_at is required' });
     }
     if (!answers || typeof answers !== 'object') {
       return res.status(400).json({ error: 'answers object is required' });
-    }
-
-    const courseConfig = courses.getCourseConfig(course);
-    const identityMode = courseConfig ? courseConfig.identity_mode : 'email';
-    if (identityMode !== 'email') {
-      return res.status(501).json({ error: `identity_mode "${identityMode}" is not yet implemented` });
     }
 
     const instrument = instrumentLoader.getInstrument(course, moduleNum);
@@ -129,8 +149,22 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
       }
     }
 
-    const participantId = identity.deriveParticipantId(ident.email, process.env.CHECKIN_HMAC_SECRET);
-    const emailEncrypted = identity.encryptEmail(ident.email, process.env.CHECKIN_AES_KEY);
+    let participantId;
+    let emailEncrypted = null;
+    if (identityMode === 'email') {
+      participantId = identity.deriveParticipantId(ident.email, process.env.CHECKIN_HMAC_SECRET);
+      emailEncrypted = identity.encryptEmail(ident.email, process.env.CHECKIN_AES_KEY);
+    } else if (identityMode === 'key') {
+      // deriveParticipantId is generic over any string input (trim + lowercase,
+      // then HMAC) -- the same function works for a key exactly as it does for
+      // an email, with no changes needed to identity.js.
+      participantId = identity.deriveParticipantId(ident.key, process.env.CHECKIN_HMAC_SECRET);
+    } else {
+      // 'none': no persistent identity, no pairing across submissions -- a
+      // fresh random id every time. checkin_participants still needs a row
+      // (checkin_responses.participant_id is a NOT NULL foreign key to it).
+      participantId = crypto.randomUUID();
+    }
     await checkinDb.upsertParticipant(participantId, emailEncrypted, identityMode);
 
     const supersedes = await checkinDb.findLatestResponseId(participantId, course, moduleNum, phase);

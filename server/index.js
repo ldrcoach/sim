@@ -17,6 +17,17 @@ const PORT = process.env.PORT || 3000;
 // client IP instead of the proxy's.
 app.set('trust proxy', 1);
 
+// Allow Canvas (ICDF) to embed the check-in flow in an iframe if a course
+// chooses to; default delivery is still a link that opens in a new tab. This
+// is a single, global policy -- courses.json's per-course allow_embed field
+// is consulted by the ICDF/Canvas launch-panel side, not by this header,
+// since the server can't know which course a request is "for" until the
+// client-side bundle parses the URL.
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.instructure.com");
+  next();
+});
+
 app.use('/api/admin', adminRoutes);
 app.use('/api', checkinRoutes);
 
@@ -231,7 +242,41 @@ app.get('/privacy', (req, res) => {
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'), (err) => {
+    // client/dist doesn't exist in dev/test (it's only produced by `npm run
+    // build`, or by the Docker image's client build stage in prod). Without
+    // this callback, a missing file makes sendFile hand the ENOENT to
+    // Express's default error handler, which sets its own
+    // Content-Security-Policy header -- silently clobbering the
+    // frame-ancestors policy set above. Responding here instead keeps that
+    // header intact and preserves the existing [200, 404] contract other
+    // tests rely on (see "GET / - static/SPA fallback" in api.test.js).
+    if (err && !res.headersSent) {
+      // Express's default handler would have logged this (visible in prod
+      // container logs); replicate that so a real failure here -- e.g. a
+      // broken image missing client/dist -- doesn't fail silently.
+      console.error('[SPA fallback] sendFile failed:', err.stack || err.message);
+      res.status(err.status || 500).end();
+    }
+  });
+});
+
+// Global error handler -- catches anything that reaches here via next(err)
+// or a synchronous throw in a route (e.g. malformed JSON bodies rejected by
+// express.json()). Without this, Express's own default handler takes over
+// and sets its own Content-Security-Policy: default-src 'none' header,
+// silently overwriting the frame-ancestors policy set above on every such
+// response -- the same clobbering problem the SPA-fallback callback above
+// fixes for one specific route, generalized here for every other route.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[Unhandled error]', err.stack || err.message);
+  // Match Express's own documented pattern: if a response is already
+  // underway, delegate to its default handler to abort/destroy the
+  // connection properly rather than leaving the request hanging.
+  if (res.headersSent) return next(err);
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.instructure.com");
+  res.status(err.status || 500).json({ error: 'Internal server error' });
 });
 
 // Only start listening when run directly (not when imported by tests)

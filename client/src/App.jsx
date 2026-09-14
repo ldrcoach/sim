@@ -19,8 +19,9 @@ function parseCheckinParams() {
   const params = new URLSearchParams(window.location.search);
   const week = params.get("week");
   const mode = params.get("mode");
+  const course = params.get("course") || "OBLD500";
   if (week && (mode === "baseline" || mode === "debrief")) {
-    return { moduleNum: Number(week), phase: mode };
+    return { moduleNum: Number(week), phase: mode, course };
   }
   return null;
 }
@@ -2184,7 +2185,7 @@ export default function App() {
     <div style={{ fontFamily: "'Segoe UI', -apple-system, sans-serif", background: C.offWhite, minHeight: "100vh" }}>
       <Header title={headerTitle} weekNum={headerWeek} subtitle={headerSub} />
       {view === "checkin" && checkinParams && (
-        <CheckIn moduleNum={checkinParams.moduleNum} phase={checkinParams.phase} />
+        <CheckIn moduleNum={checkinParams.moduleNum} phase={checkinParams.phase} course={checkinParams.course} />
       )}
       {view === "landing" && <LandingPage mode={mode} setMode={setMode} onSelectSim={selectSim} onSelectObs={selectObs} />}
       {view === "sim" && simPhase === "briefing" && <SimBriefing weekData={simWeek} scenario={simScenario} onStart={startSim} onBack={homeSim} />}

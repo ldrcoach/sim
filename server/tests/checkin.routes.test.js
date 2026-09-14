@@ -34,10 +34,15 @@ jest.mock('../db', () => ({
 }));
 
 function createApp() {
-  delete require.cache[require.resolve('../index')];
-  Object.keys(require.cache).forEach((key) => {
-    if (key.includes('express-rate-limit')) delete require.cache[key];
-  });
+  // checkin/routes.js builds its rate limiter (and in-memory hit store) once
+  // at module load. Manually deleting individual require.cache entries (the
+  // previous approach here) does not reliably evict it in this Jest setup --
+  // re-requiring after the delete kept returning the same cached module, so
+  // the limiter's request count accumulated across every test in this file
+  // and eventually tripped 429s on unrelated, later tests. jest.resetModules()
+  // is the supported way to fully clear the registry between tests; jest.mock()
+  // factories above stay in effect for whatever gets required next.
+  jest.resetModules();
   return require('../index');
 }
 
@@ -57,7 +62,11 @@ const validBaselineBody = () => ({
 
 describe('GET /api/instrument/:course/:module/:phase', () => {
   let app;
-  beforeEach(() => { app = createApp(); });
+  beforeEach(() => {
+    app = createApp();
+    mockCourseConfig = { identity_mode: 'email', email_domain_hint: 'erau.edu' };
+    mockGetCourseConfig.mockClear();
+  });
 
   test('returns the public baseline view without reverse flags', async () => {
     const res = await request(app).get('/api/instrument/OBLD500/4/baseline');
@@ -81,6 +90,21 @@ describe('GET /api/instrument/:course/:module/:phase', () => {
   test('returns 404 for an unknown module', async () => {
     const res = await request(app).get('/api/instrument/OBLD500/99/baseline');
     expect(res.status).toBe(404);
+  });
+
+  test('includes identity_mode and email_domain_hint from courses.json', async () => {
+    const res = await request(app).get('/api/instrument/OBLD500/4/baseline');
+    expect(res.status).toBe(200);
+    expect(res.body.identity_mode).toBe('email');
+    expect(res.body.email_domain_hint).toBe('erau.edu');
+  });
+
+  test('defaults identity_mode to "email" and email_domain_hint to null for an unconfigured course', async () => {
+    mockGetCourseConfig.mockReturnValueOnce(null);
+    const res = await request(app).get('/api/instrument/OBLD500/4/baseline');
+    expect(res.status).toBe(200);
+    expect(res.body.identity_mode).toBe('email');
+    expect(res.body.email_domain_hint).toBeNull();
   });
 });
 
@@ -121,6 +145,15 @@ describe('POST /api/responses', () => {
     expect(mockInsertResponse).not.toHaveBeenCalled();
   });
 
+  test('validates identity before started_at/answers, matching pre-Task-2 precedence', async () => {
+    const body = { ...validBaselineBody(), identity: { email: 'not-an-email' } };
+    delete body.started_at;
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/identity\.email/);
+    expect(mockInsertResponse).not.toHaveBeenCalled();
+  });
+
   test('returns 400 when an item answer is out of range', async () => {
     const body = validBaselineBody();
     body.answers.AL01 = 9;
@@ -154,8 +187,83 @@ describe('POST /api/responses', () => {
     expect(res.status).toBe(200);
   });
 
-  test('returns 501 when the configured identity_mode is not "email"', async () => {
+  test('accepts a valid key-mode submission and derives participant_id from the key', async () => {
     mockCourseConfig = { identity_mode: 'key' };
+    // identity: { key: ... } fully replaces validBaselineBody()'s identity: { email: ... }
+    // (object-literal override, not a merge) -- no email field is present in this body.
+    const body = { ...validBaselineBody(), identity: { key: 'blue-elephant-42' } };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(200);
+    expect(mockUpsertParticipant).toHaveBeenCalledTimes(1);
+    const [participantId, emailEncrypted, identityMode] = mockUpsertParticipant.mock.calls[0];
+    expect(participantId).toMatch(/^[a-f0-9]{64}$/); // HMAC-SHA256 hex digest
+    expect(emailEncrypted).toBeNull();
+    expect(identityMode).toBe('key');
+  });
+
+  test('derives the same participant_id for the same key across calls', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const body = { ...validBaselineBody(), identity: { key: 'blue-elephant-42' } };
+    await request(app).post('/api/responses').send(body);
+    await request(app).post('/api/responses').send(body);
+    const firstId = mockUpsertParticipant.mock.calls[0][0];
+    const secondId = mockUpsertParticipant.mock.calls[1][0];
+    expect(firstId).toBe(secondId);
+  });
+
+  test('returns 400 for key mode when identity.key is missing', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const body = { ...validBaselineBody() };
+    delete body.identity;
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(400);
+    expect(mockInsertResponse).not.toHaveBeenCalled();
+  });
+
+  test('returns 400 for key mode when identity.key is shorter than 3 characters', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const body = { ...validBaselineBody(), identity: { key: 'ab' } };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(400);
+  });
+
+  test('returns 400 for key mode when identity.key is longer than 100 characters', async () => {
+    mockCourseConfig = { identity_mode: 'key' };
+    const body = { ...validBaselineBody(), identity: { key: 'x'.repeat(101) } };
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(400);
+  });
+
+  test('accepts a valid none-mode submission with no identity field', async () => {
+    mockCourseConfig = { identity_mode: 'none' };
+    const body = { ...validBaselineBody() };
+    delete body.identity;
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(200);
+    expect(mockUpsertParticipant).toHaveBeenCalledTimes(1);
+    const [participantId, emailEncrypted, identityMode] = mockUpsertParticipant.mock.calls[0];
+    expect(typeof participantId).toBe('string');
+    expect(participantId.length).toBeGreaterThan(0);
+    expect(emailEncrypted).toBeNull();
+    expect(identityMode).toBe('none');
+  });
+
+  test('generates a different participant_id for each none-mode submission (no pairing)', async () => {
+    mockCourseConfig = { identity_mode: 'none' };
+    const body = { ...validBaselineBody() };
+    delete body.identity;
+    await request(app).post('/api/responses').send(body);
+    await request(app).post('/api/responses').send(body);
+    const firstId = mockUpsertParticipant.mock.calls[0][0];
+    const secondId = mockUpsertParticipant.mock.calls[1][0];
+    expect(firstId).not.toBe(secondId);
+  });
+
+  test('still returns 501 for an identity_mode outside email/key/none', async () => {
+    // Defensive coverage: courses.js's own validator restricts identity_mode to
+    // email/key/none, so this path isn't reachable via real config today -- but
+    // routes.js shouldn't silently misbehave if that ever changes.
+    mockCourseConfig = { identity_mode: 'sso' };
     const res = await request(app).post('/api/responses').send(validBaselineBody());
     expect(res.status).toBe(501);
     expect(mockInsertResponse).not.toHaveBeenCalled();
@@ -320,5 +428,27 @@ describe('Task 9 regression: check-in router does not affect other /api routes',
       const res = await request(app).post('/api/log').send({ event: 'test', suite: 's', scenario: 'x' });
       expect(res.status).toBe(200);
     }
+  });
+});
+
+describe('Content-Security-Policy header', () => {
+  test('sets frame-ancestors to allow Canvas embedding, on every response', async () => {
+    const app = createApp();
+    const res = await request(app).get('/');
+    expect(res.headers['content-security-policy']).toBe("frame-ancestors 'self' https://*.instructure.com");
+  });
+
+  test('survives a malformed-JSON error response too, not just success responses', async () => {
+    // Without a global error handler, a body express.json() can't parse
+    // reaches Express's own default handler, which sets its own
+    // Content-Security-Policy: default-src 'none' -- silently overwriting
+    // the frame-ancestors policy. This proves that no longer happens.
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/chat')
+      .set('Content-Type', 'application/json')
+      .send('{ this is not valid json');
+    expect(res.status).toBe(400);
+    expect(res.headers['content-security-policy']).toBe("frame-ancestors 'self' https://*.instructure.com");
   });
 });

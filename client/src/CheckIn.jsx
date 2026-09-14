@@ -12,6 +12,19 @@ function isValidEmail(email) {
   return true;
 }
 
+function isValidKey(key) {
+  if (typeof key !== "string") return false;
+  const trimmed = key.trim();
+  return trimmed.length >= 3 && trimmed.length <= 100;
+}
+
+function emailDomainMatches(email, hint) {
+  if (!hint) return true;
+  const at = email.lastIndexOf("@");
+  if (at === -1) return true; // let the hard validator handle malformed input
+  return email.slice(at + 1).toLowerCase() === hint.toLowerCase();
+}
+
 const RESPONSIVE_STYLE = `
   .checkin-radio-row { display: flex; gap: 12px; justify-content: space-between; }
   @media (max-width: 480px) {
@@ -38,9 +51,17 @@ function ErrorScreen({ message }) {
   );
 }
 
-function IntroScreen({ instrument, moduleNum, phase, email, setEmail, onStart }) {
+function IntroScreen({ instrument, moduleNum, phase, identityValue, setIdentityValue, onStart }) {
   const [touched, setTouched] = useState(false);
-  const emailValid = isValidEmail(email.trim());
+  const identityMode = instrument.identity_mode || "email";
+  const trimmedValue = identityValue.trim();
+  const identityValid =
+    identityMode === "email" ? isValidEmail(trimmedValue) :
+    identityMode === "key" ? isValidKey(trimmedValue) :
+    true; // 'none' has no identity field to validate
+  const domainMismatch =
+    identityMode === "email" && trimmedValue && isValidEmail(trimmedValue) &&
+    !emailDomainMatches(trimmedValue, instrument.email_domain_hint);
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px" }}>
@@ -63,26 +84,40 @@ function IntroScreen({ instrument, moduleNum, phase, email, setEmail, onStart })
         </div>
       </div>
 
-      <label htmlFor="checkin-email" style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
-        Your ERAU email
-      </label>
-      <input
-        id="checkin-email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        onBlur={() => setTouched(true)}
-        style={{
-          width: "100%", padding: 12, fontSize: 16, borderRadius: 6,
-          border: `1px solid ${touched && !emailValid ? C.danger : C.lightGray}`,
-          marginBottom: 6,
-        }}
-        aria-describedby={touched && !emailValid ? "email-error" : undefined}
-      />
-      {touched && !emailValid && (
-        <p id="email-error" style={{ color: C.danger, fontSize: 13, marginBottom: 12 }}>
-          Enter a valid email address.
-        </p>
+      {identityMode !== "none" && (
+        <>
+          <label htmlFor="checkin-identity" style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
+            {identityMode === "key" ? "Create a memorable phrase (e.g., first pet + birth month)" : "Your ERAU email"}
+          </label>
+          <input
+            id="checkin-identity"
+            type={identityMode === "key" ? "text" : "email"}
+            value={identityValue}
+            onChange={(e) => setIdentityValue(e.target.value)}
+            onBlur={() => setTouched(true)}
+            style={{
+              width: "100%", padding: 12, fontSize: 16, borderRadius: 6,
+              border: `1px solid ${touched && !identityValid ? C.danger : C.lightGray}`,
+              marginBottom: 6,
+            }}
+            aria-describedby={
+              [touched && !identityValid ? "identity-error" : null, domainMismatch ? "identity-domain-warning" : null]
+                .filter(Boolean).join(" ") || undefined
+            }
+          />
+          {touched && !identityValid && (
+            <p id="identity-error" style={{ color: C.danger, fontSize: 13, marginBottom: 12 }}>
+              {identityMode === "key"
+                ? "Enter a phrase between 3 and 100 characters."
+                : "Enter a valid email address."}
+            </p>
+          )}
+          {!(touched && !identityValid) && domainMismatch && (
+            <p id="identity-domain-warning" style={{ color: C.textSec, fontSize: 13, marginBottom: 12 }}>
+              This doesn't look like your {instrument.email_domain_hint} email. Double-check before continuing.
+            </p>
+          )}
+        </>
       )}
 
       <p style={{ fontSize: 13, color: C.midGray, margin: "16px 0" }}>
@@ -97,12 +132,12 @@ function IntroScreen({ instrument, moduleNum, phase, email, setEmail, onStart })
 
       <button
         onClick={onStart}
-        disabled={!emailValid}
+        disabled={!identityValid}
         style={{
           padding: "12px 28px", fontSize: 16, borderRadius: 6, border: "none",
-          background: emailValid ? C.navy : C.lightGray,
-          color: emailValid ? C.white : C.midGray,
-          cursor: emailValid ? "pointer" : "not-allowed",
+          background: identityValid ? C.navy : C.lightGray,
+          color: identityValid ? C.white : C.midGray,
+          cursor: identityValid ? "pointer" : "not-allowed",
           minHeight: 44,
         }}
       >
@@ -460,12 +495,11 @@ function ConfirmationScreen({ completionText, moduleNum, completionCode, baselin
   );
 }
 
-export default function CheckIn({ moduleNum, phase }) {
-  const course = "OBLD500";
+export default function CheckIn({ moduleNum, phase, course }) {
   const [status, setStatus] = useState("loading"); // loading | error | intro | subscale
   const [errorMessage, setErrorMessage] = useState("");
   const [instrument, setInstrument] = useState(null);
-  const [email, setEmail] = useState("");
+  const [identityValue, setIdentityValue] = useState("");
   const [answers, setAnswers] = useState({});
   const [subscaleIndex, setSubscaleIndex] = useState(0);
   const [pxAnswers, setPxAnswers] = useState({});
@@ -479,7 +513,7 @@ export default function CheckIn({ moduleNum, phase }) {
   const loadInstrument = useCallback(async () => {
     setStatus("loading");
     try {
-      const res = await fetch(`/api/instrument/${course}/${moduleNum}/${phase}`);
+      const res = await fetch(`/api/instrument/${encodeURIComponent(course)}/${moduleNum}/${phase}`);
       if (!res.ok) {
         throw new Error(res.status === 404 ? "No check-in found for this module." : `Error ${res.status}`);
       }
@@ -509,11 +543,16 @@ export default function CheckIn({ moduleNum, phase }) {
     setSubmitting(true);
     setSubmitError(null);
     try {
+      const identityMode = instrument.identity_mode || "email";
+      const identity =
+        identityMode === "email" ? { email: identityValue.trim() } :
+        identityMode === "key" ? { key: identityValue.trim() } :
+        null;
       const body = {
         course,
         module: moduleNum,
         phase,
-        identity: { email: email.trim() },
+        identity,
         started_at: startedAt,
         answers,
         ...(phase === "debrief" ? { extras: { post_experience: pxAnswers, open_ended: openAnswers } } : {}),
@@ -560,8 +599,8 @@ export default function CheckIn({ moduleNum, phase }) {
           instrument={instrument}
           moduleNum={moduleNum}
           phase={phase}
-          email={email}
-          setEmail={setEmail}
+          identityValue={identityValue}
+          setIdentityValue={setIdentityValue}
           onStart={() => { setStartedAt(new Date().toISOString()); setStatus("subscale"); }}
         />
       )}
