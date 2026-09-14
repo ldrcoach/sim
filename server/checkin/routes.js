@@ -80,12 +80,6 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
     if (!VALID_PHASES.includes(phase)) {
       return res.status(400).json({ error: 'phase must be "baseline" or "debrief"' });
     }
-    if (!started_at || typeof started_at !== 'string') {
-      return res.status(400).json({ error: 'started_at is required' });
-    }
-    if (!answers || typeof answers !== 'object') {
-      return res.status(400).json({ error: 'answers object is required' });
-    }
 
     const courseConfig = courses.getCourseConfig(course);
     const identityMode = courseConfig ? courseConfig.identity_mode : 'email';
@@ -102,6 +96,13 @@ router.post('/responses', checkinLimiter, express.json({ limit: '64kb' }), requi
       return res.status(501).json({ error: `identity_mode "${identityMode}" is not yet implemented` });
     }
     // 'none' mode requires no identity field at all -- any submitted `identity` is ignored.
+
+    if (!started_at || typeof started_at !== 'string') {
+      return res.status(400).json({ error: 'started_at is required' });
+    }
+    if (!answers || typeof answers !== 'object') {
+      return res.status(400).json({ error: 'answers object is required' });
+    }
 
     const instrument = instrumentLoader.getInstrument(course, moduleNum);
     if (!instrument) {

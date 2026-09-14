@@ -145,6 +145,15 @@ describe('POST /api/responses', () => {
     expect(mockInsertResponse).not.toHaveBeenCalled();
   });
 
+  test('validates identity before started_at/answers, matching pre-Task-2 precedence', async () => {
+    const body = { ...validBaselineBody(), identity: { email: 'not-an-email' } };
+    delete body.started_at;
+    const res = await request(app).post('/api/responses').send(body);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/identity\.email/);
+    expect(mockInsertResponse).not.toHaveBeenCalled();
+  });
+
   test('returns 400 when an item answer is out of range', async () => {
     const body = validBaselineBody();
     body.answers.AL01 = 9;
