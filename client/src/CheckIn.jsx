@@ -374,14 +374,14 @@ function ReviewScreen({ instrument, phase, answeredCounts, onSubmit, onBack, sub
 function ThenAndNowPanel({ comparisons, subscales }) {
   return (
     <div style={{ marginTop: 24, textAlign: "left" }}>
-      <h3 style={{ fontSize: 16, color: C.navy, marginBottom: 12 }}>Then and Now</h3>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+      <h3 id="then-and-now-heading" style={{ fontSize: 16, color: C.navy, marginBottom: 12 }}>Then and Now</h3>
+      <table aria-labelledby="then-and-now-heading" style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
         <thead>
           <tr style={{ borderBottom: `1px solid ${C.lightGray}` }}>
-            <th style={{ textAlign: "left", padding: "6px 4px" }}>Dimension</th>
-            <th style={{ textAlign: "right", padding: "6px 4px" }}>Baseline</th>
-            <th style={{ textAlign: "right", padding: "6px 4px" }}>Debrief</th>
-            <th style={{ textAlign: "right", padding: "6px 4px" }}>Change</th>
+            <th scope="col" style={{ textAlign: "left", padding: "6px 4px" }}>Dimension</th>
+            <th scope="col" style={{ textAlign: "right", padding: "6px 4px" }}>Baseline</th>
+            <th scope="col" style={{ textAlign: "right", padding: "6px 4px" }}>Debrief</th>
+            <th scope="col" style={{ textAlign: "right", padding: "6px 4px" }}>Change</th>
           </tr>
         </thead>
         <tbody>
@@ -391,11 +391,11 @@ function ThenAndNowPanel({ comparisons, subscales }) {
               <tr key={c.subscale_id} style={{ borderBottom: `1px solid ${C.lightGray}` }}>
                 <td style={{ padding: "6px 4px" }}>{subscale ? subscale.name : c.subscale_id}</td>
                 <td style={{ textAlign: "right", padding: "6px 4px" }}>
-                  {c.baseline_mean != null ? c.baseline_mean.toFixed(2) : "--"}
+                  {c.baseline_mean != null ? c.baseline_mean.toFixed(2) : "Not available"}
                 </td>
                 <td style={{ textAlign: "right", padding: "6px 4px" }}>{c.debrief_mean.toFixed(2)}</td>
                 <td style={{ textAlign: "right", padding: "6px 4px" }}>
-                  {c.delta != null ? (c.delta > 0 ? `+${c.delta.toFixed(2)}` : c.delta.toFixed(2)) : "--"}
+                  {c.delta != null ? (c.delta > 0 ? `+${c.delta.toFixed(2)}` : c.delta.toFixed(2)) : "Not available"}
                 </td>
               </tr>
             );
@@ -409,6 +409,11 @@ function ThenAndNowPanel({ comparisons, subscales }) {
 function ConfirmationScreen({ completionText, moduleNum, completionCode, baselineComparison, subscales }) {
   const [copyState, setCopyState] = useState("idle"); // idle | copied | failed
   const text = completionText.replace("{module}", moduleNum);
+  const headingRef = useRef(null);
+
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
 
   const handleCopy = async () => {
     try {
@@ -424,7 +429,7 @@ function ConfirmationScreen({ completionText, moduleNum, completionCode, baselin
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px", textAlign: "center" }}>
-      <h2 style={{ fontSize: 20, color: C.navy, marginBottom: 16 }}>Complete</h2>
+      <h2 ref={headingRef} tabIndex={-1} style={{ fontSize: 20, color: C.navy, marginBottom: 16 }}>Complete</h2>
       <p style={{ marginBottom: 24, lineHeight: 1.6 }}>{text}</p>
 
       <div style={{
