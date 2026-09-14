@@ -39,7 +39,8 @@ Container Apps, Consumption plan.
   plain env vars. Currently: `ANTHROPIC_API_KEY`, `DATABASE_URL`, and (for
   the Check-In Module) `CHECKIN_HMAC_SECRET`/`CHECKIN_AES_KEY`
   (`ldrc-sim-checkin-hmac-secret`/`ldrc-sim-checkin-aes-key` in Key Vault)
-  plus `CHECKIN_ADMIN_TOKEN` (needed once the admin API is deployed).
+  plus `CHECKIN_ADMIN_TOKEN` (`ldrc-sim-checkin-admin-token` in Key Vault,
+  deployed since the admin API shipped).
 
 ### Deploying a new build
 
@@ -104,7 +105,11 @@ npm run build
 
 ## CI/CD
 
-- **GitHub Actions:** `.github/workflows/ci.yml` runs the server Jest tests on push/PR to `main`.
+- **GitHub Actions:**
+  - `.github/workflows/ci.yml` runs the server Jest tests on push/PR to `main`.
+  - `.github/workflows/purge-expired.yml` calls the Check-In Module's
+    retention purge daily via cron (also supports manual `workflow_dispatch`
+    runs) -- see the Check-In Module section above.
 
 ## Persistence (PostgreSQL)
 
