@@ -4,7 +4,7 @@
  "abbrev": "EM",
  "topic": "Empathy",
  "version": "2027.01",
- "psychometric_note": "The Perspective Taking and Empathic Concern subscales adapt items from Davis's Interpersonal Reactivity Index (Davis, 1983), reworded for a professional/leadership context. The Leadership Application of Empathy subscale is original content specific to this course.",
+ "psychometric_note": "The Perspective Taking and Empathic Concern subscales adapt items from Davis's Interpersonal Reactivity Index (Davis, 1983), reworded for a professional/leadership context. The Leadership Application of Empathy subscale is original content specific to this course. Scoring direction, settled 2026-09-15: the Empathic Concern items (EM09, EM11, EM13) are Davis's other-oriented concern subscale, which the IRI literature and the module's own Kock et al. (2019) source treat as adaptive, so higher scores at Debrief are the intended direction. What Module 5 teaches learners to manage is Davis's Personal Distress, self-focused absorption of another's state, which this instrument does not measure. The two are not to be conflated when reading a Baseline-to-Debrief change.",
  "scale": {
   "points": 7,
   "labels": ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"]
