@@ -21,7 +21,7 @@
     {"id": "SL01", "text": "I understand why storytelling is an essential leadership competency, not just a communication technique.", "reverse": false},
     {"id": "SL02", "text": "I can explain how stories build trust between leaders and their teams.", "reverse": false},
     {"id": "SL03", "text": "I recognize the difference between sharing data and telling a story that makes data meaningful.", "reverse": false},
-    {"id": "SL04", "text": "I believe that leaders who rely on stories rather than evidence are less effective.", "reverse": true},
+    {"id": "SL04", "text": "I can explain when a story and when evidence is the right tool for a leader to reach for.", "reverse": false},
     {"id": "SL05", "text": "I can identify specific moments when a leader's story changed how I felt about a situation.", "reverse": false}
    ]
   },
@@ -32,7 +32,7 @@
    "items": [
     {"id": "SL06", "text": "I can describe the basic structure of the Hero's Journey and how it applies to leadership narratives.", "reverse": false},
     {"id": "SL07", "text": "I understand how 'crucible' experiences can become the foundation of a leader's story.", "reverse": false},
-    {"id": "SL08", "text": "I find frameworks like the Hero's Journey too simplistic to capture real leadership development.", "reverse": true},
+    {"id": "SL08", "text": "I treat narrative frameworks like the Hero's Journey as tools to adapt rather than templates to follow.", "reverse": false},
     {"id": "SL09", "text": "I can identify Hero's Journey stages in stories told by leaders I know or admire.", "reverse": false},
     {"id": "SL10", "text": "I understand the connection between a leader's life story and authentic leadership development.", "reverse": false}
    ]

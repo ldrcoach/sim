@@ -56,7 +56,7 @@
    "items": [
     {"id": "CT16", "text": "I routinely analyze the quality of reasoning in organizational communications.", "reverse": false},
     {"id": "CT17", "text": "I create conditions in my team that encourage questioning and constructive challenge.", "reverse": false},
-    {"id": "CT18", "text": "I rely on intuition more than systematic analysis when making leadership decisions.", "reverse": true},
+    {"id": "CT18", "text": "I can tell when a leadership decision needs systematic analysis rather than my intuition.", "reverse": false},
     {"id": "CT19", "text": "I apply a structured thinking process to important decisions rather than deciding on instinct.", "reverse": false},
     {"id": "CT20", "text": "I help others examine their assumptions and reasoning, not just their conclusions.", "reverse": false}
    ]
