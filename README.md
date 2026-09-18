@@ -2,6 +2,8 @@
 
 AI-powered observation and practice simulations for OBLD 500 (Leadership in Organizations) at Embry-Riddle Aeronautical University.
 
+**Resuming work here?** Read [`HANDOFF.md`](HANDOFF.md) first: current deploy state, what's merged but not yet deployed, and open items future sessions shouldn't have to rediscover.
+
 ## What This Is
 
 54 AI scenarios across 9 weeks:
