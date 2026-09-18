@@ -1,5 +1,5 @@
 # Sim: standing handoff
-Stamp: 2026-09-18 1000 PDT
+Stamp: 2026-09-18 1015 PDT
 
 Read this first when work on Sim resumes. It is the current state of record.
 Update it at the end of any session that merges, deploys, or changes what a
@@ -17,15 +17,13 @@ you've read that.
 
 ## Current state
 
-- `main` at commit `caa6bb8`. No open PRs, no uncommitted changes.
-- Deployed: `sim-prod` revision `sim-prod--0000012`, image
-  `sim-prod:20260915120505`, running clean.
-- **`main` is one commit ahead of what's deployed.** `caa6bb8` (LF.json
-  provenance-note wording, double hyphen to colon) is merged but not
-  deployed. Zero student-facing impact: the field it touches
-  (`psychometric_note`) never reaches the public API. But it's real drift
-  between committed and live. Close it on the next deploy rather than
-  batching it with something else and forgetting.
+- `main` at commit `de0d4be` (merge of PR #11, this file's own introduction).
+  No open PRs, no uncommitted changes.
+- Deployed: `sim-prod` revision `sim-prod--0000013`, image
+  `sim-prod:20260918100535`, running clean. **`main` and deployed are in
+  sync**; `caa6bb8`'s fix (previously undeployed) shipped with this build.
+  Verified live: `GET /api/instrument/OBLD500/9/baseline` returns SL04's
+  corrected wording; app boots clean.
 - All 9 OBLD 500 Check-In modules serve real, sourced instrument content. No
   placeholders remain.
 - 195/195 server tests passing. 0 open Dependabot alerts. CI runs both the
@@ -82,20 +80,19 @@ start implementing against an assumption.** Ask the user to scope them first.
 
 ## Open items
 
-1. **Deploy `caa6bb8`.** See "Current state" above. Low urgency, real drift.
-2. **Branch protection on `main`.** Not configured. Not requested. Flagged
+1. **Branch protection on `main`.** Not configured. Not requested. Flagged
    twice now (PR #9's review, this handoff) so it doesn't need discovering a
    third time; surface it if the topic of merge safety comes up again.
-3. **"Sim app purge scheduling" and "IP wording for SimuLeader."** Carried
+2. **"Sim app purge scheduling" and "IP wording for SimuLeader."** Carried
    over from ICDF's `HANDOFF.md`. Needs scoping with the user; don't act on
    a guess.
-4. **EM.json's content is IRI-derived** (Davis's Interpersonal Reactivity
+3. **EM.json's content is IRI-derived** (Davis's Interpersonal Reactivity
    Index, 1983), disclosed via `psychometric_note`, and the user explicitly
    authorized shipping it as-is ("consider the licensing settled"). That's a
    decision, not a cleared license. Revisit from
    `D:\DEV\icdf\courses\obld500\instruments\README.md`'s "Licensing
    decisions" section if this is ever challenged.
-5. **Multi-course wiring exists in the code** (`courses.json`, identity
+4. **Multi-course wiring exists in the code** (`courses.json`, identity
    modes, the `?course=` param) but only `OBLD500` is actually configured.
    Not actionable until another course asks for it.
 
