@@ -4,6 +4,8 @@
 
 AI-powered observation and practice simulations for OBLD 500 (Leadership in Organizations) at ERAU. 54 scenarios across 9 weeks: 27 observations (AI demonstrations) + 27 simulations (interactive with rubric scoring). 81 unique characters. Live at sim.ldrcoach.com.
 
+**Read [`HANDOFF.md`](HANDOFF.md) at the start of any session that resumes work here.** It carries current deploy state, what's merged but undeployed, cross-repo state with ICDF (the OBLD 500 course-content pipeline), and open items, kept current session to session so they don't need rediscovering.
+
 ## Tech Stack
 
 - Frontend: React (Vite build), JSX
