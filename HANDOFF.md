@@ -1,5 +1,5 @@
 # Sim: standing handoff
-Stamp: 2026-09-18 1015 PDT
+Stamp: 2026-09-27 1400 PDT
 
 Read this first when work on Sim resumes. It is the current state of record.
 Update it at the end of any session that merges, deploys, or changes what a
@@ -17,13 +17,18 @@ you've read that.
 
 ## Current state
 
-- `main` at commit `de0d4be` (merge of PR #11, this file's own introduction).
-  No open PRs, no uncommitted changes.
+- `main` at commit `1c5899f` (merge of PR #12). No open PRs, no uncommitted
+  changes.
 - Deployed: `sim-prod` revision `sim-prod--0000013`, image
-  `sim-prod:20260918100535`, running clean. **`main` and deployed are in
-  sync**; `caa6bb8`'s fix (previously undeployed) shipped with this build.
-  Verified live: `GET /api/instrument/OBLD500/9/baseline` returns SL04's
-  corrected wording; app boots clean.
+  `sim-prod:20260918100535`, running clean. **`main` is one merge ahead of
+  what's deployed again.** [ldrcoach/sim#13](https://github.com/ldrcoach/sim/pull/13)
+  (merged `3e8870e`) rewrote the `/privacy` page's data-retention statement
+  to match actual purge behavior, motivated by ERAU IT Security's risk
+  assessment of SimuLeader (ticket 581416). It touches `server/index.js`, so
+  it needs a build+deploy to reach students; hasn't happened yet as of this
+  stamp. This is exactly the kind of drift this file exists to track: check
+  `git log origin/main` against the deployed image tag before assuming
+  they match.
 - All 9 OBLD 500 Check-In modules serve real, sourced instrument content. No
   placeholders remain.
 - 195/195 server tests passing. 0 open Dependabot alerts. CI runs both the
@@ -32,6 +37,13 @@ you've read that.
   repos/ldrcoach/sim/branches/main/protection` returns 404). CI checks show
   red/green but don't block a merge on failure. Nobody has asked for this to
   be fixed; it's just true and easy to forget.
+- **Other sessions merge into this repo too, not just the one reading this
+  file.** PR #13 was opened by a different Claude Code (cloud) session on
+  2026-09-24, six days after this file was first written, and its own PR
+  description didn't know `caa6bb8` had already been deployed. Don't assume
+  this file (or any session's memory) is the only thing changing `main`;
+  re-check `gh pr list` and `git log origin/main` at the start of a session,
+  not just this file.
 
 ## Where things live
 
