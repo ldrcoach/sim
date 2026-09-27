@@ -14,5 +14,6 @@ describe('GET /privacy', () => {
     expect(res.text).toMatch(/LDRC/);
     expect(res.text).toMatch(/course measurement/i);
     expect(res.text).toMatch(/delete/i);
+    expect(res.text).toMatch(/90 days after your course ends/);
   });
 });
