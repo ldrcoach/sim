@@ -229,9 +229,9 @@ app.get('/privacy', (req, res) => {
   <h2>How long</h2>
   <p>Your email is deleted automatically 90 days after your course ends.
   After that, your answers are kept only under a coded ID, without your
-  email, and are used only in aggregate for course measurement. You can
-  ask your course developer to delete your data at any time before or
-  after that date -- see "How to ask for deletion" below.</p>
+  email or name attached, for course measurement. You can ask your course
+  developer to delete your data at any time before or after that date; see
+  "How to ask for deletion" below.</p>
 
   <h2>How to ask for deletion</h2>
   <p>Email your course developer at any time to ask that your responses be
