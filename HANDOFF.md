@@ -1,5 +1,5 @@
 # Sim: standing handoff
-Stamp: 2026-09-18 1015 PDT
+Stamp: 2026-09-28 1430 PDT
 
 Read this first when work on Sim resumes. It is the current state of record.
 Update it at the end of any session that merges, deploys, or changes what a
@@ -17,13 +17,14 @@ you've read that.
 
 ## Current state
 
-- `main` at commit `de0d4be` (merge of PR #11, this file's own introduction).
-  No open PRs, no uncommitted changes.
-- Deployed: `sim-prod` revision `sim-prod--0000013`, image
-  `sim-prod:20260918100535`, running clean. **`main` and deployed are in
-  sync**; `caa6bb8`'s fix (previously undeployed) shipped with this build.
-  Verified live: `GET /api/instrument/OBLD500/9/baseline` returns SL04's
-  corrected wording; app boots clean.
+- `main` at commit `1c5899f`. No open PRs besides this file's own update.
+- Deployed: `sim-prod` revision `sim-prod--0000014`, image
+  `sim-prod:20260928141700` (built from `1c5899f`), running clean. **`main`
+  and deployed are in sync.** Verified live 2026-09-28: `/privacy` states the
+  90-day email deletion (PR #13).
+- `sim-prod` has no `MODEL` env var, so `/api/chat` uses the code default,
+  `claude-sonnet-5`. ERAU IT was told Sonnet 5; if you set `MODEL`, the IT
+  description changes too.
 - All 9 OBLD 500 Check-In modules serve real, sourced instrument content. No
   placeholders remain.
 - 195/195 server tests passing. 0 open Dependabot alerts. CI runs both the
@@ -78,6 +79,40 @@ that one line anywhere in ICDF; no ticket, no elaboration, checked via grep
 across the whole `courses/obld500/` tree. **Don't guess at what these mean or
 start implementing against an assumption.** Ask the user to scope them first.
 
+## ERAU IT security review (ticket 581416)
+
+ERAU IT Security is reviewing SimuLeader for use in OBLD 500. The user sent
+their answers on or around 2026-09-24. Treat what was stated as commitments;
+changing any of them means telling IT:
+
+- Simulation/observation conversations go browser -> Sim server -> Anthropic
+  API and are **not stored** by Sim (the client only calls `/api/chat`; the
+  `sim_sessions`/`sim_transcripts` persistence endpoints exist but are
+  unused). No student identifiers are sent to the AI.
+- Check-In data is never sent to the AI. Email is AES-256-GCM encrypted,
+  stored apart from answers (answers keyed by an HMAC-derived ID), and
+  **deleted automatically 90 days after the course end date**
+  (`courses.json`: `course_end_date` 2027-03-14 +
+  `retention_days_after_end` 90, so first real purge is 2027-06-12). The
+  daily `purge-expired.yml` workflow runs green; `CHECKIN_ADMIN_TOKEN` is set
+  on both sides.
+- Anthropic: Commercial Terms, no training on API data, inputs/outputs
+  deleted within 30 days. Verified in the Console: the org default is 30-day
+  retention, no ZDR. Don't describe this as "zero retention."
+- Offered as an option, not enabled: switching OBLD500's `identity_mode` to
+  `key` (no email stored).
+
+Next expected step: IT's security questionnaire. Draft answers from the code,
+not from memory, and keep them consistent with the list above.
+
+**ZDR decision (2026-09-28):** stay on 30-day retention. If IT ever requires
+zero retention, request ZDR for a **separate Anthropic organization** and
+move Sim's key there (`ldrc-sim-anthropic-api-key` in Key Vault, then restart
+`sim-prod`). Don't enable ZDR on the current org: ZDR is org-wide, it blocks
+the Covered Models (Fable 5/5.1, Mythos 5/5.1) other LDRC projects use, and
+the only per-workspace override goes the other direction (30-day inside a ZDR
+org). Sonnet/Opus/Haiku are unaffected either way.
+
 ## Open items
 
 1. **Branch protection on `main`.** Not configured. Not requested. Flagged
@@ -119,6 +154,10 @@ start implementing against an assumption.** Ask the user to scope them first.
   there, stage exact file paths, never a broad `git add -A`, since unrelated
   work-in-progress from other sessions routinely sits uncommitted alongside
   whatever you're doing.
+- **Public-facing text must match the code.** The privacy statement once
+  said data was kept "as long as useful" while the code purged emails at 90
+  days. Before anything goes to IT, students, or ERAU, check each claim
+  against the code or live config, and fix whichever side is wrong.
 - **JSON-diff instrument files by content, not raw text**, per the sync
   discipline above: a raw diff between Sim's and ICDF's copies will look
   like total rewrite even when nothing substantive changed.
