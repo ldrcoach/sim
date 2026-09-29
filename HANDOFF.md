@@ -1,5 +1,5 @@
 # Sim: standing handoff
-Stamp: 2026-09-28 1430 PDT
+Stamp: 2026-09-29 0900 PDT
 
 Read this first when work on Sim resumes. It is the current state of record.
 Update it at the end of any session that merges, deploys, or changes what a
@@ -17,10 +17,12 @@ you've read that.
 
 ## Current state
 
-- `main` at commit `1c5899f`. No open PRs besides this file's own update.
+- `main` at commit `168e2e6` (PR #15's own merge). **Zero open PRs, zero
+  branches besides `main`** as of this stamp.
 - Deployed: `sim-prod` revision `sim-prod--0000014`, image
-  `sim-prod:20260928141700` (built from `1c5899f`), running clean. **`main`
-  and deployed are in sync.** Verified live 2026-09-28: `/privacy` states the
+  `sim-prod:20260928141700` (built from `1c5899f`, one commit behind `main`,
+  but that one commit is this file's own prose; nothing code-facing changed).
+  **`main` and deployed are in sync.** Verified live: `/privacy` states the
   90-day email deletion (PR #13).
 - `sim-prod` has no `MODEL` env var, so `/api/chat` uses the code default,
   `claude-sonnet-5`. ERAU IT was told Sonnet 5; if you set `MODEL`, the IT
@@ -33,6 +35,18 @@ you've read that.
   repos/ldrcoach/sim/branches/main/protection` returns 404). CI checks show
   red/green but don't block a merge on failure. Nobody has asked for this to
   be fixed; it's just true and easy to forget.
+- **Session closeout, 2026-09-29:** a doc-sync PR (#14) opened by this local
+  session's history turned out redundant with #15, which a different cloud
+  session had already merged more completely (including the actual deploy).
+  Closed #14 rather than merging stale content over #15. Deleted every
+  fully-merged branch, local and remote (`chore/dependabot-fixes`,
+  `claude/funny-gates-8riq6b`, both `docs/handoff-*`, `feature/ci-client-build`,
+  `fix/lf-real-instrument-content`), plus `wip/uncommitted-2026-08-01` (a
+  2026-08-01 defensive snapshot of 3 now-superseded untracked files, deleted
+  with explicit user confirmation after inspection). Also found and fixed
+  five-plus-months-stale Cortex project-context entries that still described
+  a decommissioned DigitalOcean droplet, no database, and no tests; see
+  `cortex_project_context(project_id="sim")` for the corrected version.
 
 ## Where things live
 
@@ -161,6 +175,12 @@ org). Sonnet/Opus/Haiku are unaffected either way.
 - **JSON-diff instrument files by content, not raw text**, per the sync
   discipline above: a raw diff between Sim's and ICDF's copies will look
   like total rewrite even when nothing substantive changed.
+- **Before opening a doc-sync PR (like this file's own updates), check
+  `gh pr list` and read the live file on `main` first**, not just this
+  session's own last-known state. PR #14 and #15 both tried to update this
+  exact file the same week; #15, from a different session, got there first
+  and more completely, making #14 pure rework. Checking first would have
+  caught that before spending the effort.
 
 ## Standing rules for this project
 
